@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<recipe>
+
+<command_sequence>
+ 
+ 
+
+		 <valve_protocol>StripFormamide</valve_protocol>  
+
+		 <valve_protocol>Hybridize 1</valve_protocol>   
+	
+   
+       <change_directory>S:\12_04_2025_JenieSample_re\H1</change_directory> 
+          <loop name = "Position Loop Zscan1" increment = "name"><item name = "Conv1"></item></loop>
+            
+           	
+
+		 <valve_protocol>StripFormamide</valve_protocol>  
+		 
+		     <valve_protocol>Hybridize 2</valve_protocol>  
+	
+   
+       <change_directory>S:\12_04_2025_JenieSample_re\H2</change_directory> 
+          <loop name = "Position Loop Zscan1" increment = "name"><item name = "Conv1"></item></loop>
+            
+           
+
+		 <valve_protocol>StripFormamide</valve_protocol>  
+		 
+		     <valve_protocol>Hybridize 3</valve_protocol>  
+	
+   
+       <change_directory>S:\12_04_2025_JenieSample_re\H3</change_directory> 
+          <loop name = "Position Loop Zscan1" increment = "name"><item name = "Conv1"></item></loop>
+            
+           
+    
+
+
+
+		 <valve_protocol>StripFormamide</valve_protocol>  
+		 
+		     <valve_protocol>Hybridize 4</valve_protocol>  
+	
+   
+       <change_directory>S:\12_04_2025_JenieSample_re\H4</change_directory> 
+          <loop name = "Position Loop Zscan1" increment = "name"><item name = "Conv1"></item></loop>
+            
+           
+
+
+
+		 <valve_protocol>StripFormamide</valve_protocol>  
+		 
+		     <valve_protocol>Hybridize 5</valve_protocol>  
+	
+   
+       <change_directory>S:\12_04_2025_JenieSample_re\H5</change_directory> 
+          <loop name = "Position Loop Zscan1" increment = "name"><item name = "Conv1"></item></loop>
+            
+           
+
+
+
+
+		 <valve_protocol>StripFormamide</valve_protocol>  
+		 
+		     <valve_protocol>Hybridize 6</valve_protocol>  
+	
+   
+       <change_directory>S:\12_04_2025_JenieSample_re\H6</change_directory> 
+          <loop name = "Position Loop Zscan1" increment = "name"><item name = "Conv1"></item></loop>
+            
+           
+
+
+		 <valve_protocol>StripFormamide</valve_protocol>  
+		 
+		     <valve_protocol>Hybridize 7</valve_protocol>  
+	
+   
+       <change_directory>S:\12_04_2025_JenieSample_re\H7</change_directory> 
+          <loop name = "Position Loop Zscan1" increment = "name"><item name = "Conv1"></item></loop>
+            
+    
+		 <valve_protocol>StripFormamide</valve_protocol>  
+		 
+		     <valve_protocol>Hybridize 8</valve_protocol>  
+	
+   
+       <change_directory>S:\12_04_2025_JenieSample_re\H8</change_directory> 
+          <loop name = "Position Loop Zscan1" increment = "name"><item name = "Conv1"></item></loop>
+            
+     
+		 <valve_protocol>StripFormamide</valve_protocol>  
+		 
+		     <valve_protocol>Hybridize 9</valve_protocol>  
+	
+   
+       <change_directory>S:\12_04_2025_JenieSample_re\H9</change_directory> 
+          <loop name = "Position Loop Zscan1" increment = "name"><item name = "Conv1"></item></loop>
+
+			 <valve_protocol>Flow SSC</valve_protocol>     
+			 
+			 
+</command_sequence>
+
+<item name = "Conv1">
+  <movie>
+    <name increment = "Yes">Conv_zscan1_</name>
+            <overwrite>True</overwrite>
+    <length>200</length>
+    <parameters>60Xfast</parameters>
+<check_focus><num_focus_checks>20</num_focus_checks><focus_scan/></check_focus>
+    <variable_entry name = "Position Loop Zscan1"></variable_entry>
+  </movie>
+</item>
+
+    <loop_variable name = "Position Loop Zscan1">
+   <file_path>pos_1_modified.txt</file_path>
+</loop_variable>
+
+
+
+
+    </recipe>

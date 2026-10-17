@@ -1,0 +1,1 @@
+cmd /K ""C:\Users\MERFISH9\anaconda3\Scripts\activate.bat" "hal_env" &  "python" "C:\MEGAFISH\storm_control\hal4000\hal4000.py" "C:\MEGAFISH\MEGAFISH-configs\megafish_hcam_celesta_tiger_config.xml""

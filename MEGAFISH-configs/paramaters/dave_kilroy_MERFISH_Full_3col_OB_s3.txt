@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<recipe>
+
+<command_sequence>
+ 
+      <valve_protocol>Hybridize 6</valve_protocol>
+<valve_protocol>Wait time</valve_protocol><valve_protocol>Wait time</valve_protocol>
+      <valve_protocol>Short Wash</valve_protocol>
+      <valve_protocol>Flow STORM Buffer</valve_protocol>
+
+   <change_directory>F:\12_6_2020__OR-MER_lib1,2,3,4,5____CD1mom3_toB6pups_3col_40xStorm3_OB10\H0EGR1,cfos</change_directory><wakeup>20000</wakeup>
+      
+  <loop name = "Position Loop Zscan" increment = "name">
+    <item name = "Conv"></item>
+  </loop>
+
+     <delay>2000</delay>
+      <copy_directory>
+        <source_path>F:\12_6_2020__OR-MER_lib1,2,3,4,5____CD1mom3_toB6pups_3col_40xStorm3_OB10\H0EGR1,cfos</source_path>
+        <target_path>\\dolly\Raw_data_4\Bogdan\12_6_2020__OR-MER_lib1,2,3,4,5____CD1mom3_toB6pups_3col_40xStorm3_OB10\H0EGR1,cfos</target_path>
+        <delete_source>True</delete_source>
+      </copy_directory>
+      
+
+
+   <change_directory>F:\12_4_2020__OR-MER_lib1,2,3,4,5____CD1mom3_toB6pups_3col_40xStorm3_OB14_MOE\H0EGR1,cfos</change_directory><wakeup>20000</wakeup>
+      
+  <loop name = "Position Loop Zscan2" increment = "name">
+    <item name = "Conv2"></item>
+  </loop>
+
+     <delay>2000</delay>
+      <copy_directory>
+        <source_path>F:\12_4_2020__OR-MER_lib1,2,3,4,5____CD1mom3_toB6pups_3col_40xStorm3_OB14_MOE\H0EGR1,cfos</source_path>
+        <target_path>\\dolly\Raw_data_4\Bogdan\12_4_2020__OR-MER_lib1,2,3,4,5____CD1mom3_toB6pups_3col_40xStorm3_OB14_MOE\H0EGR1,cfos</target_path>
+        <delete_source>True</delete_source>
+      </copy_directory>
+
+  <valve_protocol>Hybridize 1</valve_protocol><valve_protocol>Wait time</valve_protocol><valve_protocol>Wait time</valve_protocol>
+  <valve_protocol>Short Wash</valve_protocol><valve_protocol>Flow STORM Buffer</valve_protocol>    
+  <change_directory>F:\12_6_2020__OR-MER_lib1,2,3,4,5____CD1mom3_toB6pups_3col_40xStorm3_OB10\H1R1,2,3;TEGR1</change_directory><wakeup>20000</wakeup>
+  <loop name = "Position Loop Zscan" increment = "name">
+    <item name = "Conv"></item>
+  </loop>
+
+     <delay>2000</delay>
+      <copy_directory>
+        <source_path>F:\12_6_2020__OR-MER_lib1,2,3,4,5____CD1mom3_toB6pups_3col_40xStorm3_OB10\H1R1,2,3;TEGR1</source_path>
+        <target_path>\\dolly\Raw_data_4\Bogdan\12_6_2020__OR-MER_lib1,2,3,4,5____CD1mom3_toB6pups_3col_40xStorm3_OB10\H1R1,2,3;TEGR1</target_path>
+        <delete_source>True</delete_source>
+      </copy_directory>
+
+
+        <change_directory>F:\12_4_2020__OR-MER_lib1,2,3,4,5____CD1mom3_toB6pups_3col_40xStorm3_OB14_MOE\H1R1,2,3;TEGR1</change_directory><wakeup>20000</wakeup>
+  <loop name = "Position Loop Zscan2" increment = "name">
+    <item name = "Conv2"></item>
+  </loop>
+
+     <delay>2000</delay>
+      <copy_directory>
+        <source_path>F:\12_4_2020__OR-MER_lib1,2,3,4,5____CD1mom3_toB6pups_3col_40xStorm3_OB14_MOE\H1R1,2,3;TEGR1</source_path>
+        <target_path>\\dolly\Raw_data_4\Bogdan\12_4_2020__OR-MER_lib1,2,3,4,5____CD1mom3_toB6pups_3col_40xStorm3_OB14_MOE\H1R1,2,3;TEGR1</target_path>
+        <delete_source>True</delete_source>
+      </copy_directory>
+
+  <valve_protocol>Hybridize 2</valve_protocol><valve_protocol>Wait time</valve_protocol><valve_protocol>Wait time</valve_protocol>
+  <valve_protocol>Short Wash</valve_protocol><valve_protocol>Flow STORM Buffer</valve_protocol>    
+  <change_directory>F:\12_6_2020__OR-MER_lib1,2,3,4,5____CD1mom3_toB6pups_3col_40xStorm3_OB10\H2R4,5,6;T1,2,3</change_directory><wakeup>20000</wakeup>
+  <loop name = "Position Loop Zscan" increment = "name">
+    <item name = "Conv"></item>
+  </loop>
+   <delay>2000</delay>
+      <copy_directory>
+        <source_path>F:\12_6_2020__OR-MER_lib1,2,3,4,5____CD1mom3_toB6pups_3col_40xStorm3_OB10\H2R4,5,6;T1,2,3</source_path>
+        <target_path>\\dolly\Raw_data_4\Bogdan\12_6_2020__OR-MER_lib1,2,3,4,5____CD1mom3_toB6pups_3col_40xStorm3_OB10\H2R4,5,6;T1,2,3</target_path>
+        <delete_source>True</delete_source>
+      </copy_directory>
+  <change_directory>F:\12_4_2020__OR-MER_lib1,2,3,4,5____CD1mom3_toB6pups_3col_40xStorm3_OB14_MOE\H2R4,5,6;T1,2,3</change_directory><wakeup>20000</wakeup>
+  <loop name = "Position Loop Zscan2" increment = "name">
+    <item name = "Conv2"></item>
+  </loop>
+   <delay>2000</delay>
+      <copy_directory>
+        <source_path>F:\12_4_2020__OR-MER_lib1,2,3,4,5____CD1mom3_toB6pups_3col_40xStorm3_OB14_MOE\H2R4,5,6;T1,2,3</source_path>
+        <target_path>\\dolly\Raw_data_4\Bogdan\12_4_2020__OR-MER_lib1,2,3,4,5____CD1mom3_toB6pups_3col_40xStorm3_OB14_MOE\H2R4,5,6;T1,2,3</target_path>
+        <delete_source>True</delete_source>
+      </copy_directory>
+
+  <valve_protocol>Hybridize 3</valve_protocol><valve_protocol>Wait time</valve_protocol><valve_protocol>Wait time</valve_protocol>
+  <valve_protocol>Short Wash</valve_protocol><valve_protocol>Flow STORM Buffer</valve_protocol>    
+  <change_directory>F:\12_6_2020__OR-MER_lib1,2,3,4,5____CD1mom3_toB6pups_3col_40xStorm3_OB10\H3R7,8,9;T4,5,6</change_directory><wakeup>20000</wakeup>
+  <loop name = "Position Loop Zscan" increment = "name">
+    <item name = "Conv"></item>
+  </loop>
+   <delay>2000</delay>
+      <copy_directory>
+        <source_path>F:\12_6_2020__OR-MER_lib1,2,3,4,5____CD1mom3_toB6pups_3col_40xStorm3_OB10\H3R7,8,9;T4,5,6</source_path>
+        <target_path>\\dolly\Raw_data_4\Bogdan\12_6_2020__OR-MER_lib1,2,3,4,5____CD1mom3_toB6pups_3col_40xStorm3_OB10\H3R7,8,9;T4,5,6</target_path>
+        <delete_source>True</delete_source>
+      </copy_directory>
+  <change_directory>F:\12_4_2020__OR-MER_lib1,2,3,4,5____CD1mom3_toB6pups_3col_40xStorm3_OB14_MOE\H3R7,8,9;T4,5,6</change_directory><wakeup>20000</wakeup>
+  <loop name = "Position Loop Zscan2" increment = "name">
+    <item name = "Conv2"></item>
+  </loop>
+   <delay>2000</delay>
+      <copy_directory>
+        <source_path>F:\12_4_2020__OR-MER_lib1,2,3,4,5____CD1mom3_toB6pups_3col_40xStorm3_OB14_MOE\H3R7,8,9;T4,5,6</source_path>
+        <target_path>\\dolly\Raw_data_4\Bogdan\12_4_2020__OR-MER_lib1,2,3,4,5____CD1mom3_toB6pups_3col_40xStorm3_OB14_MOE\H3R7,8,9;T4,5,6</target_path>
+        <delete_source>True</delete_source>
+      </copy_directory>
+
+
+  <valve_protocol>Hybridize 4</valve_protocol><valve_protocol>Wait time</valve_protocol><valve_protocol>Wait time</valve_protocol>
+  <valve_protocol>Short Wash</valve_protocol><valve_protocol>Flow STORM Buffer</valve_protocol>    
+  <change_directory>F:\12_6_2020__OR-MER_lib1,2,3,4,5____CD1mom3_toB6pups_3col_40xStorm3_OB10\H4R10,11,12;T7,8,9</change_directory><wakeup>20000</wakeup>
+  <loop name = "Position Loop Zscan" increment = "name">
+    <item name = "Conv"></item>
+  </loop>
+   <delay>2000</delay>
+      <copy_directory>
+        <source_path>F:\12_6_2020__OR-MER_lib1,2,3,4,5____CD1mom3_toB6pups_3col_40xStorm3_OB10\H4R10,11,12;T7,8,9</source_path>
+        <target_path>\\dolly\Raw_data_4\Bogdan\12_6_2020__OR-MER_lib1,2,3,4,5____CD1mom3_toB6pups_3col_40xStorm3_OB10\H4R10,11,12;T7,8,9</target_path>
+        <delete_source>True</delete_source>
+      </copy_directory>
+  <change_directory>F:\12_4_2020__OR-MER_lib1,2,3,4,5____CD1mom3_toB6pups_3col_40xStorm3_OB14_MOE\H4R10,11,12;T7,8,9</change_directory><wakeup>20000</wakeup>
+  <loop name = "Position Loop Zscan2" increment = "name">
+    <item name = "Conv2"></item>
+  </loop>
+   <delay>2000</delay>
+      <copy_directory>
+        <source_path>F:\12_4_2020__OR-MER_lib1,2,3,4,5____CD1mom3_toB6pups_3col_40xStorm3_OB14_MOE\H4R10,11,12;T7,8,9</source_path>
+        <target_path>\\dolly\Raw_data_4\Bogdan\12_4_2020__OR-MER_lib1,2,3,4,5____CD1mom3_toB6pups_3col_40xStorm3_OB14_MOE\H4R10,11,12;T7,8,9</target_path>
+        <delete_source>True</delete_source>
+      </copy_directory>
+
+  <valve_protocol>Hybridize 5</valve_protocol><valve_protocol>Wait time</valve_protocol><valve_protocol>Wait time</valve_protocol>
+  <valve_protocol>Short Wash</valve_protocol><valve_protocol>Flow STORM Buffer</valve_protocol>    
+  <change_directory>F:\12_6_2020__OR-MER_lib1,2,3,4,5____CD1mom3_toB6pups_3col_40xStorm3_OB10\H5R14,15,13;T10,11,12</change_directory><wakeup>20000</wakeup>
+  <loop name = "Position Loop Zscan" increment = "name">
+    <item name = "Conv"></item>
+  </loop>
+   <delay>2000</delay>
+      <copy_directory>
+        <source_path>F:\12_6_2020__OR-MER_lib1,2,3,4,5____CD1mom3_toB6pups_3col_40xStorm3_OB10\H5R14,15,13;T10,11,12</source_path>
+        <target_path>\\dolly\Raw_data_4\Bogdan\12_6_2020__OR-MER_lib1,2,3,4,5____CD1mom3_toB6pups_3col_40xStorm3_OB10\H5R14,15,13;T10,11,12</target_path>
+        <delete_source>True</delete_source>
+      </copy_directory>
+  <change_directory>F:\12_4_2020__OR-MER_lib1,2,3,4,5____CD1mom3_toB6pups_3col_40xStorm3_OB14_MOE\H5R14,15,13;T10,11,12</change_directory><wakeup>20000</wakeup>
+  <loop name = "Position Loop Zscan2" increment = "name">
+    <item name = "Conv2"></item>
+  </loop>
+   <delay>2000</delay>
+      <copy_directory>
+        <source_path>F:\12_4_2020__OR-MER_lib1,2,3,4,5____CD1mom3_toB6pups_3col_40xStorm3_OB14_MOE\H5R14,15,13;T10,11,12</source_path>
+        <target_path>\\dolly\Raw_data_4\Bogdan\12_4_2020__OR-MER_lib1,2,3,4,5____CD1mom3_toB6pups_3col_40xStorm3_OB14_MOE\H5R14,15,13;T10,11,12</target_path>
+        <delete_source>True</delete_source>
+      </copy_directory>
+
+</command_sequence>
+
+<item name = "Conv">
+  <movie>
+    <name increment = "Yes">Conv_zscan</name>
+        <overwrite>True</overwrite>
+    <length>200</length>
+    <parameters>conv-30Hz_3col_10um_250nm_15Hz</parameters>
+    <check_focus>
+        <num_focus_checks>20</num_focus_checks>
+        <focus_scan/>
+    </check_focus>
+    <variable_entry name = "Position Loop Zscan"></variable_entry>
+  </movie>
+</item>
+
+
+<item name = "Conv2">
+  <movie>
+    <name increment = "Yes">Conv_zscan2</name>
+        <overwrite>True</overwrite>
+    <length>200</length>
+    <parameters>conv-30Hz_3col_25um_500nm</parameters>
+    <check_focus>
+        <num_focus_checks>20</num_focus_checks>
+        <focus_scan/>
+    </check_focus>
+    <variable_entry name = "Position Loop Zscan2"></variable_entry>
+  </movie>
+</item>
+
+<loop_variable name = "Position Loop Zscan">
+   <file_path>pos_ob.txt</file_path>
+</loop_variable>
+
+<loop_variable name = "Position Loop Zscan2">
+   <file_path>pos.txt</file_path>
+</loop_variable>
+
+</recipe>
+

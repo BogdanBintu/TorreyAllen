@@ -1,0 +1,1 @@
+cmd /K ""C:\ProgramData\Anaconda3\Scripts\activate.bat" "merfishplus" &  "python" "C:\Software\Mammoth\storm_control\fluidics\kilroy.py" "C:\Software\Mammoth\storm_control\fluidics\kilroy_settings_default.xml""

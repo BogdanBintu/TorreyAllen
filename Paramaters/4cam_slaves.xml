@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<settings>
+  <tiger_controller validate="True">
+    <encoder_scan validate="True">
+      <enabled type="boolean">True</enabled>
+      <step_size_um type="float">0.3</step_size_um>
+      <travel_distance_um type="float">12.0</travel_distance_um>
+      <fps type="float">40.0</fps>
+      <start_offset_um type="float">3.0</start_offset_um>
+    </encoder_scan>
+  </tiger_controller>
+  <camera1 validate="True">
+    <default_max type="int">20000</default_max>
+    <default_min type="int">100</default_min>
+    <exp_len type="int">40</exp_len>
+    <exposure_time type="float">0.025</exposure_time>
+    <extension type="string">c1</extension>
+    <flip_horizontal type="boolean">False</flip_horizontal>
+    <flip_vertical type="boolean">False</flip_vertical>
+	<transpose type="boolean">True</transpose>
+	
+	
+    <param_spdtab_index type="int">0</param_spdtab_index>
+    <saved type="boolean">True</saved>
+    
+    <triger_mode type="int">1</triger_mode>
+    <y_bin type="int">1</y_bin>
+    <y_end type="int">2900</y_end>
+    <y_pixels type="int">2600</y_pixels>
+    <y_start type="int">301</y_start>
+
+    <x_bin type="int">1</x_bin>
+    <x_end type="int">2900</x_end>
+    <x_pixels type="int">2600</x_pixels>
+    <x_start type="int">301</x_start>
+  </camera1>
+  
+  <camera2 validate="True">
+    <default_max type="int">20000</default_max>
+    <default_min type="int">100</default_min>
+    <exp_len type="int">40</exp_len>
+    <exposure_time type="float">0.025</exposure_time>
+    <extension type="string">c2</extension>
+    <flip_horizontal type="boolean">False</flip_horizontal>
+    <flip_vertical type="boolean">True</flip_vertical>
+	<transpose type="boolean">True</transpose>
+	
+    <param_spdtab_index type="int">0</param_spdtab_index>
+    <saved type="boolean">True</saved>
+    
+    <triger_mode type="int">1</triger_mode>
+    <y_bin type="int">1</y_bin>
+    <y_end type="int">2900</y_end>
+    <y_pixels type="int">2600</y_pixels>
+    <y_start type="int">301</y_start>
+
+    <x_bin type="int">1</x_bin>
+    <x_end type="int">2900</x_end>
+    <x_pixels type="int">2600</x_pixels>
+    <x_start type="int">301</x_start>
+  </camera2>
+  
+  
+  
+  
+    <camera3 validate="True">
+    <default_max type="int">20000</default_max>
+    <default_min type="int">100</default_min>
+    <exp_len type="int">40</exp_len>
+    <exposure_time type="float">0.025</exposure_time>
+    <extension type="string">c3</extension>
+    <flip_horizontal type="boolean">True</flip_horizontal>
+    <flip_vertical type="boolean">False</flip_vertical>
+	<transpose type="boolean">True</transpose>
+	
+	
+    <param_spdtab_index type="int">0</param_spdtab_index>
+    <saved type="boolean">True</saved>
+    
+    <triger_mode type="int">1</triger_mode>
+    <y_bin type="int">1</y_bin>
+    <y_end type="int">2900</y_end>
+    <y_pixels type="int">2600</y_pixels>
+    <y_start type="int">301</y_start>
+
+    <x_bin type="int">1</x_bin>
+    <x_end type="int">2900</x_end>
+    <x_pixels type="int">2600</x_pixels>
+    <x_start type="int">301</x_start>
+  </camera3>
+  
+  
+  
+  
+    <camera4 validate="True">
+    <default_max type="int">20000</default_max>
+    <default_min type="int">100</default_min>
+    <exp_len type="int">40</exp_len>
+    <exposure_time type="float">0.025</exposure_time>
+    <extension type="string">c4</extension>
+    <flip_horizontal type="boolean">False</flip_horizontal>
+    <flip_vertical type="boolean">False</flip_vertical>
+	<transpose type="boolean">True</transpose>
+	
+	
+    <param_spdtab_index type="int">0</param_spdtab_index>
+    <saved type="boolean">True</saved>
+    
+    <triger_mode type="int">1</triger_mode>
+    <y_bin type="int">1</y_bin>
+    <y_end type="int">2900</y_end>
+    <y_pixels type="int">2600</y_pixels>
+    <y_start type="int">301</y_start>
+
+    <x_bin type="int">1</x_bin>
+    <x_end type="int">2900</x_end>
+    <x_pixels type="int">2600</x_pixels>
+    <x_start type="int">301</x_start>
+  </camera4>
+  
+  
+  
+  
+  
+  <display00 validate="False">
+    <camera1 validate="True">
+      <center_x type="float">1601.0</center_x>
+      <center_y type="float">1601.0</center_y>
+      <colortable type="string">ramp.ctbl</colortable>
+      <display_max type="int">20000</display_max>
+      <display_min type="int">100</display_min>
+      <initialized type="boolean">True</initialized>
+      <scale type="int">-6</scale>
+      <sync type="int">0</sync>
+    </camera1>
+    <feed_name type="string">camera1</feed_name>
+  </display00>
+  
+  
+    <display01 validate="False">
+    <camera2 validate="True">
+      <center_x type="float">1601.0</center_x>
+      <center_y type="float">1601.0</center_y>
+      <colortable type="string">ramp.ctbl</colortable>
+      <display_max type="int">20000</display_max>
+      <display_min type="int">100</display_min>
+      <initialized type="boolean">True</initialized>
+      <scale type="int">-6</scale>
+      <sync type="int">0</sync>
+    </camera2>
+    <feed_name type="string">camera2</feed_name>
+  </display01>
+  
+  
+      <display02 validate="False">
+    <camera3 validate="True">
+      <center_x type="float">1601.0</center_x>
+      <center_y type="float">1601.0</center_y>
+      <colortable type="string">ramp.ctbl</colortable>
+      <display_max type="int">20000</display_max>
+      <display_min type="int">100</display_min>
+      <initialized type="boolean">True</initialized>
+      <scale type="int">-6</scale>
+      <sync type="int">0</sync>
+    </camera3>
+    <feed_name type="string">camera3</feed_name>
+  </display02>
+  
+  
+  
+        <display03 validate="False">
+    <camera4 validate="True">
+      <center_x type="float">1601.0</center_x>
+      <center_y type="float">1601.0</center_y>
+      <colortable type="string">ramp.ctbl</colortable>
+      <display_max type="int">20000</display_max>
+      <display_min type="int">100</display_min>
+      <initialized type="boolean">True</initialized>
+      <scale type="int">-6</scale>
+      <sync type="int">0</sync>
+    </camera4>
+    <feed_name type="string">camera4</feed_name>
+  </display03>
+  
+  <film validate="False">
+    <acq_mode type="string">fixed_length</acq_mode>
+    <auto_increment type="boolean">True</auto_increment>
+    <auto_shutters type="boolean">False</auto_shutters>
+    <extension type="string"/>
+    <filename type="string">movie</filename>
+    <filetype type="string">.comp.zarr</filetype>
+    <frames type="int">40</frames>
+    <want_bell type="boolean">True</want_bell>
+  </film>
+  <focuslock validate="True">
+    <calibrate validate="True">
+      <deadtime type="int">20</deadtime>
+      <frames_to_pause type="int">2</frames_to_pause>
+      <range type="float">600.0</range>
+      <step_size type="float">10.0</step_size>
+    </calibrate>
+    <find_sum validate="True">
+      <step_size type="float">0.5</step_size>
+    </find_sum>
+    <hardware_z_scan validate="True">
+      <z_offsets type="string"></z_offsets>
+    </hardware_z_scan>
+    <jump_size type="float">1.5</jump_size>
+    <locked validate="True">
+      <buffer_length type="int">5</buffer_length>
+      <lock_gain type="float">0.5</lock_gain>
+      <lock_gain_max type="float">0.7</lock_gain_max>
+      <minimum_sum type="float">-1.0</minimum_sum>
+      <offset_threshold type="float">750.0</offset_threshold>
+    </locked>
+    <optimal_mode validate="True">
+      <bracket_step type="float">1000.0</bracket_step>
+      <quality_threshold type="float">0.0</quality_threshold>
+      <scan_hold type="int">10</scan_hold>
+      <scan_step type="float">100.0</scan_step>
+    </optimal_mode>
+    <scan validate="True">
+      <minimum_sum type="float">10000.0</minimum_sum>
+      <offset_threshold type="float">750.0</offset_threshold>
+      <scan_range type="float">10.0</scan_range>
+      <scan_step type="float">0.1</scan_step>
+    </scan>
+  </focuslock>
+  <illumination validate="True">
+    <default_power type="custom">1.0,1.0,1.0,0.000,0.200</default_power>
+    <on_off_state type="custom">False,False,False,False,False</on_off_state>
+    <power_buttons type="custom">[[['Max', 1.0], ['Low', 0.1]], [['Max', 1.0], ['Low', 0.1]], [['Max', 1.0], ['Low', 0.1]], [['Max', 1.0], ['Low', 0.1]], [['Max', 1.0], ['Low', 0.1]]]</power_buttons>
+    <shutters type="string">C:\TorreyAllen\Paramaters\750_647_561_405_shutter.xml</shutters>
+  </illumination>
+  <mosaic validate="False">
+    <flip_horizontal type="boolean">True</flip_horizontal>
+    <flip_vertical type="boolean">False</flip_vertical>
+    <obj1 type="custom">60x,0.108333,0.0,0.0</obj1>
+    <obj2 type="custom">4x,1.47,-62.00,-214.00</obj2>
+    <objective type="string">obj1</objective>
+    <transpose type="boolean">False</transpose>
+  </mosaic>
+  <stage validate="True">
+    <large_step_size type="float">25.0</large_step_size>
+    <small_step_size type="float">5.0</small_step_size>
+  </stage>
+  <timing validate="True">
+    <time_base type="string">camera1</time_base>
+  </timing>
+  <z_stage validate="True">
+    <z_large_step type="float">10.0</z_large_step>
+    <z_small_step type="float">1.0</z_small_step>
+  </z_stage>
+</settings>

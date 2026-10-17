@@ -1,0 +1,1 @@
+cmd /K ""C:\Users\Plum\anaconda3\Scripts\activate.bat" "plum" &  "python" "C:\Software\Plum\storm_control\steve\steve.py" "C:\Software\Plum\storm_control\steve\settings_default.xml""

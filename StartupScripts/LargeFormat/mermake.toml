@@ -1,0 +1,40 @@
+[paths]
+codebook = 'none'
+psf_file = 'U:\MERFISHp\12_16_2025_BigSlideTest\psf_single.npy'
+flat_field_tag = 'U:\MERFISHp\12_16_2025_BigSlideTest\V2_med'
+hyb_range = 'H1_MER_set1:H9_MER_set10'
+hyb_folders = ['U:\MERFISHp\12_16_2025_BigSlideTest',]
+output_folder = 'U:\MERFISHp\12_16_2025_BigSlideTest\mermake_fits'
+redo = false
+#---------------------------------------------------------------------------------------#
+#---------------------------------------------------------------------------------------#
+#           you probably dont have to change any of the settings below                  #
+#---------------------------------------------------------------------------------------#
+#---------------------------------------------------------------------------------------#
+
+hyb_save =  '{fov}--{tag}--col{icol}__Xhfits.npz'
+dapi_save = '{fov}--{tag}--dapiFeatures.npz'
+drift_save = 'drift_{fov}--.pkl'
+regex = '''([A-z]+)(\d+)_(.+)_set(\d+)(.*)''' #use triple quotes to avoid double escape
+
+[hybs]
+tile_size = 500
+overlap = 89
+beta = 0.0001
+threshold = 3600
+blur_radius = 30
+delta = 1
+delta_fit = 3
+sigmaZ = 1
+sigmaXY = 1.5
+
+[dapi]
+tile_size = 500
+overlap = 89
+beta = 0.01
+threshold = 3.0
+blur_radius = 50
+delta = 5
+delta_fit = 5
+sigmaZ = 1
+sigmaXY = 1.5

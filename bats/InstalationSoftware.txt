@@ -1,0 +1,79 @@
+#conda create -n storm python=3.8
+conda create -n storm python=3.9
+pip install [all the packages â€“ see storm control install]
+
+
+
+Install software:
+Started by donwloading the github repository for Scope1
+
+Clone the base after installiing anaconda:
+Or 
+conda create --name scorpion39 python==3.9
+activate scorpion39 
+pip install PyDAQmx 
+pip install pyserial
+pip install zarr
+Did not do this:
+pip install napari[all]==0.4.14
+pip install "pydantic<2"
+Instead: pip install napari[all]
+
+
+(2) Install Dependencies:
+ (a) Mingw (only if you need to compile C libraries)
+ (b) Python3 (64 bit is preferred)
+ (c) PyQt5
+ (d) pywin32
+ (e) numpy
+ (f) scipy (for the optimal focus lock mode)
+ (g) pywinusb (for the logitech joystick)
+ (h) PyBluez (for bluetooth / android)
+ (i) Pillow (or PIL).
+ (j) Tifffile
+ (k) PyDAQmx (for national instruments DAQ)
+ (l) pyserial
+
+
+
+https://github.com/ZhuangLab/storm-control/blob/master/storm_control/hal4000/INSTALL.txt
+
+(5) Add the storm_control directory to your Python path by placing a .pth file in 
+the python site-packages directory, e.g. venv_dir/lib/site-packages.
+
+c:\users\user\.conda\envs\merfishplus\lib\site-packages
+
+An example .pth file is included as C:\Software\Mammoth\storm_control\hal4000/storm_control.pth.  
+ 
+ 
+(6) Create data & logs directories:
+The default directory for saving data is "c:\Data\". You can change
+this is in settings xml file. You will also need to create a sub-directory
+of the default directory called "logs", which is where hal (and the other
+programs) will store their log files. If you don't change the default
+directory the full path for the log files is "c:\Data\logs\".
+
+
+pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cu129
+
+(7) Verify that the software works:
+In the folder where the hal-4000.py file is located type: 
+cd C:\Software\Mammoth\storm_control\hal4000
+python hal4000.py xml/none_config.xml
+
+(8) Install thorlabs sdk software 
+Thorlabs Scientific Imaging Software x64
+
+Run python setup.py install inside: C:\Users\User\Downloads\thorlabs_tsi_sdk-0.0.8
+Change in:c:\users\user\.conda\envs\merfishplus\Lib\site-packages\thorlabs_tsi_sdk\tl_camera.py
+
+if platform.system() == 'Windows':
+                #self._sdk = cdll.LoadLibrary(r"thorlabs_tsi_camera_sdk.dll")
+                self._sdk = cdll.LoadLibrary(r"C:\Program Files\Thorlabs\Scientific Imaging\ThorCam\thorlabs_tsi_camera_sdk.dll")
+add to env path to the top: C:\Program Files\Thorlabs\Scientific Imaging\ThorCam
+
+(9)  Install storm-analysis
+https://github.com/ZhuangLab/storm-analysis/releases
+pip install storm_analysis-2.2-py3-none-any.whl
+
+

@@ -1,0 +1,1 @@
+cmd /K ""C:\ProgramData\Anaconda3\Scripts\activate.bat" "merfishplus" &  "python" "C:\Software\Mammoth\storm_control\dave\dave.py" "C:\Software\Mammoth\storm_control\dave\settings_default.xml""

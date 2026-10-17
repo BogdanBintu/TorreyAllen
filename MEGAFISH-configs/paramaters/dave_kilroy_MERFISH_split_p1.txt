@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<recipe>
+
+<command_sequence>
+ 
+  <valve_protocol>Hybridize 12</valve_protocol>
+  <delay>3600000</delay>
+  <valve_protocol>Flow Wash Buffer</valve_protocol>
+  <valve_protocol>Hybridize 7</valve_protocol>
+  <valve_protocol>Hybridize Readout</valve_protocol>
+
+</command_sequence>
+
+
+</recipe>
+

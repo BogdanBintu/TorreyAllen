@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<recipe>
+
+<command_sequence>
+ 
+ 
+
+
+
+		
+		  
+		  
+	
+
+		
+
+  
+
+
+
+
+		 <valve_protocol>StripFormamide</valve_protocol>  
+		 
+		     <valve_protocol>Hybridize MER 4</valve_protocol>  
+	
+   
+       <change_directory>D:\20251010_D164_S9_BGDev23GW\2000DNA\Reg1_NKX2-1\H3_R7_8_9</change_directory> 
+          <loop name = "Position Loop Zscan1" increment = "name"><item name = "Conv1"></item></loop>
+            
+           
+    
+        <delay>2000</delay>
+          <copy_directory>
+            <source_path>D:\20251010_D164_S9_BGDev23GW\2000DNA\Reg1_NKX2-1\H3_R7_8_9</source_path>
+            <target_path>R:\20251010_D164_S9_BGDev23GW\2000DNA\Reg1_NKX2-1\H3_R7_8_9</target_path>
+            <delete_source>True</delete_source>
+          </copy_directory>	 
+
+  
+
+
+
+
+		 <valve_protocol>StripFormamide</valve_protocol>  
+		 
+		     <valve_protocol>Hybridize MER 5</valve_protocol>  
+	
+   
+       <change_directory>E:\20251010_D164_S9_BGDev23GW\2000DNA\Reg1_NKX2-1\H4_R10_11_12</change_directory> 
+          <loop name = "Position Loop Zscan1" increment = "name"><item name = "Conv1"></item></loop>
+            
+           
+    
+        <delay>2000</delay>
+          <copy_directory>
+            <source_path>E:\20251010_D164_S9_BGDev23GW\2000DNA\Reg1_NKX2-1\H4_R10_11_12</source_path>
+            <target_path>R:\20251010_D164_S9_BGDev23GW\2000DNA\Reg1_NKX2-1\H4_R10_11_12</target_path>
+            <delete_source>True</delete_source>
+          </copy_directory>	 
+
+   <valve_protocol>StripFormamide</valve_protocol>  
+		 
+		     <valve_protocol>Hybridize Readout</valve_protocol>  
+	
+   
+       <change_directory>D:\20251010_D164_S9_BGDev23GW\2000DNA\Reg1_NKX2-1\H0_after</change_directory> 
+          <loop name = "Position Loop Zscan1" increment = "name"><item name = "Conv1"></item></loop>
+            
+           
+    
+        <delay>2000</delay>
+          <copy_directory>
+            <source_path>D:\20251010_D164_S9_BGDev23GW\2000DNA\Reg1_NKX2-1\H0_after</source_path>
+            <target_path>R:\20251010_D164_S9_BGDev23GW\2000DNA\Reg1_NKX2-1\H0_after</target_path>
+            <delete_source>True</delete_source>
+          </copy_directory>
+               
+
+	  
+			 <valve_protocol>Flow SSC</valve_protocol>     
+			 
+			 
+</command_sequence>
+
+<item name = "Conv1">
+  <movie>
+    <name increment = "Yes">Conv_zscan1_</name>
+            <overwrite>True</overwrite>
+    <length>200</length>
+    <parameters>Kinetix-15Hz_750_647_561_405_15um_DNA300nmComp</parameters>
+<check_focus><num_focus_checks>20</num_focus_checks><focus_scan/></check_focus>
+    <variable_entry name = "Position Loop Zscan1"></variable_entry>
+  </movie>
+</item>
+
+    <loop_variable name = "Position Loop Zscan1">
+   <file_path>pos_short.txt</file_path>
+</loop_variable>
+
+
+
+
+    </recipe>

@@ -1,0 +1,1 @@
+cmd /K ""C:\Users\Plum\anaconda3\Scripts\activate.bat" "plum" &  "python" "C:\Software\Plum\storm_control\hal4000\hal4000.py" "C:\Software\Plum\MEGAFISH-configs\megafish_hcam_celesta_tiger_config_kinetix.xml""

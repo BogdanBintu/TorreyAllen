@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<recipe>
+
+<command_sequence>
+ 
+  <valve_protocol>Hybridize 6</valve_protocol>
+   <change_directory>C:\Data\BB_WEA_Sind_12_12_2020_split\H6GFP</change_directory><wakeup>5000</wakeup>
+      
+  <loop name = "Position Loop Zscan" increment = "name">
+    <item name = "Conv"></item>
+  </loop>
+
+
+  <change_directory>C:\Data\BB_WEA_Sind_12_12_2020_split\H6GFP_low</change_directory><wakeup>5000</wakeup>
+      
+  <loop name = "Position Loop Zscan" increment = "name">
+    <item name = "Conv2"></item>
+  </loop>
+
+</command_sequence>
+
+<item name = "Conv">
+  <movie>
+    <name increment = "Yes">Conv_zscan</name>
+        <overwrite>True</overwrite>
+    <length>200</length>
+    <parameters>zscan_4cols</parameters>
+    <check_focus>
+        <num_focus_checks>20</num_focus_checks>
+        <focus_scan/>
+    </check_focus>
+    <variable_entry name = "Position Loop Zscan"></variable_entry>
+  </movie>
+</item>
+
+<item name = "Conv2">
+  <movie>
+    <name increment = "Yes">Conv_zscan</name>
+        <overwrite>True</overwrite>
+    <length>200</length>
+    <parameters>zscan_4cols_low</parameters>
+    <check_focus>
+        <num_focus_checks>20</num_focus_checks>
+        <focus_scan/>
+    </check_focus>
+    <variable_entry name = "Position Loop Zscan"></variable_entry>
+  </movie>
+</item>
+
+<item name = "Bleach">
+  <movie>
+    <name increment = "Yes">Bleach</name>
+        <overwrite>True</overwrite>
+    <length>30</length>
+    <parameters>bleach</parameters>
+    <check_focus>
+        <num_focus_checks>20</num_focus_checks>
+        <focus_scan/>
+    </check_focus>
+    <variable_entry name = "Position Loop Zscan"></variable_entry>
+  </movie>
+</item>
+
+
+<loop_variable name = "Position Loop Zscan">
+   <file_path>pos2.txt</file_path>
+</loop_variable>
+
+
+</recipe>
+

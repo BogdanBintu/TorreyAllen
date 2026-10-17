@@ -1,0 +1,1 @@
+cmd /K ""C:\ProgramData\anaconda3\Scripts\activate.bat" "merfishpp" &  "python" "C:\TorreyAllen\storm_control\steve\steve.py" "C:\TorreyAllen\Paramaters\steve_settings_default.xml""
