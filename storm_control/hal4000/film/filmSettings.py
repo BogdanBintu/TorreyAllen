@@ -17,6 +17,7 @@ class FilmSettings(object):
                  run_shutters = False,
                  save_film = True,
                  tcp_request = False,
+                 reuse_encoder_scan = False,
                  **kwds):
     
         super().__init__(**kwds)
@@ -29,6 +30,7 @@ class FilmSettings(object):
         assert(isinstance(run_shutters, bool))
         assert(isinstance(save_film, bool))
         assert(isinstance(tcp_request, bool))
+        assert(isinstance(reuse_encoder_scan, bool))
 
         # Either "run_till_abort" or "fixed_length"
         self.acq_mode = acq_mode
@@ -55,6 +57,9 @@ class FilmSettings(object):
         # Whether the film request came from the record button or TCP.
         self.tcp_request = tcp_request
 
+        # This applies to this movie only; manual recordings default to False.
+        self.reuse_encoder_scan = reuse_encoder_scan
+
     def getBasename(self):
         return self.basename
 
@@ -75,6 +80,9 @@ class FilmSettings(object):
     
     def isTCPRequest(self):
         return self.tcp_request
+
+    def reuseEncoderScan(self):
+        return self.reuse_encoder_scan
 
     def overwriteOk(self):
         return self.overwrite

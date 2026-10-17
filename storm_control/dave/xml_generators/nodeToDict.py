@@ -60,6 +60,7 @@ movie_node_conversion = {"delay" : gf("delay", [int]),
                          "pause" : gf("pause", [boolConv]),
                          "progression" : gf("progression", [None]),
                          "recenter" : gf("recenter", [boolConv]),
+                         "reuse_encoder_scan" : gf("reuse_encoder_scan", [str]),
                          "stage_x" : gf("stage_x", [float]),
                          "stage_y" : gf("stage_y", [float]),
                          "stage_z" : gf("stage_z", [float])}

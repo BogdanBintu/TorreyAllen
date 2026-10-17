@@ -1285,7 +1285,8 @@ class DATakeMovie(DaveAction):
                            "min_spots" : None,
                            "parameters" : None,
                            "directory" : None,
-                           "overwrite" : None}
+                           "overwrite" : None,
+                           "reuse_encoder_scan" : None}
 
     ## abort
     #
@@ -1308,6 +1309,7 @@ class DATakeMovie(DaveAction):
         parameters = dictionary.get("parameters")
         directory = dictionary.get("directory")
         overwrite = dictionary.get("overwrite")
+        reuse_encoder_scan = dictionary.get("reuse_encoder_scan")
         if (name is not None) and (length is not None):
             if (length > 0):
                 block = ElementTree.Element(str(type(self).__name__))
@@ -1325,6 +1327,9 @@ class DATakeMovie(DaveAction):
 
                 if overwrite is not None:
                     addField(block, "overwrite", overwrite)
+
+                if reuse_encoder_scan is not None:
+                    addField(block, "reuse_encoder_scan", reuse_encoder_scan)
 
                 return block
 
@@ -1370,6 +1375,11 @@ class DATakeMovie(DaveAction):
                         "length" : self.length,
                         "min_spots" : self.min_spots,
                         "parameters" : None}
+
+        reuse_text = node.findtext("reuse_encoder_scan", default="False")
+        if reuse_text is None or reuse_text.strip().lower() not in ("true", "false"):
+            raise ValueError("reuse_encoder_scan must be True or False")
+        message_data["reuse_encoder_scan"] = reuse_text.strip().lower() == "true"
         
         if node.find("parameters") is not None:
             message_data["parameters"] = node.find("parameters").text
@@ -1397,6 +1407,7 @@ class DATakeMovie(DaveAction):
         self.id = str(self.length) + " "
         if message_data["parameters"] is not None:
             self.id = str(message_data["parameters"])
+        self.id += " reuse_encoder_scan: " + str(message_data["reuse_encoder_scan"])
 
 ## DAValveProtocol
 #

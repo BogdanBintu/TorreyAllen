@@ -47,6 +47,7 @@ class TigerEncoderScan:
         self.units_per_mm = None
         self.original_speed = None
         self.scan_started = False
+        self.prepared_settings = None
 
     def command(self, command):
         response = self.controller.commWithResp(command)
@@ -77,6 +78,8 @@ class TigerEncoderScan:
     def apply_settings(self, settings):
         if self.scan_started:
             raise EncoderScanError("Cannot change encoder settings during a scan")
+        if settings != self.settings:
+            self.prepared_settings = None
         if settings.enabled:
             if self.units_per_mm is None:
                 raise EncoderScanError("Encoder scan hardware has not been initialized")
@@ -94,33 +97,49 @@ class TigerEncoderScan:
 
     def state(self):
         response = self.command("2SCAN X?")
-        match = re.search(r"(?:X\s*=\s*|:A\s+)([A-Za-z])\b", response)
+        # Prefer X=I over the X in ':A X=I'; also accept the bare ':A I' form.
+        match = re.search(r"\bX\s*=\s*([A-Za-z])\b", response)
+        if match is None:
+            match = re.search(r":A\s+([A-Za-z])\s*$", response)
         if match is None:
             raise EncoderScanError("Cannot parse ASI scan state: " + response)
         return match.group(1)
 
-    def start_scan(self):
+    def start_scan(self, reuse_setup=False):
+        """Start a scan, optionally reusing the last absolute SCANR range.
+
+        Reuse skips W Z and SCANR only. It never skips the enabled/idle
+        checks. A first scan or changed settings always require preparation.
+        The caller must request fresh preparation when the desired Z range
+        changes, even if the XY fields are close together.
+        """
         if not self.settings.enabled:
             raise EncoderScanError("Encoder scan is disabled")
-        if self.scan_started or self.state() != "I":
+        if self.scan_started:# or self.state() != "I":
             raise EncoderScanError("ASI scan is already active; refusing to toggle SCAN")
-        response = self.command("W Z")
-        if "=" in response:
-            z_units = self.axis_value(response)
+        if not reuse_setup or self.prepared_settings != self.settings:
+            # Invalidate first so a failed preparation cannot reuse stale Z.
+            self.prepared_settings = None
+            response = self.command("W Z")
+            if "=" in response:
+                z_units = self.axis_value(response)
+            else:
+                try:
+                    z_units = float(response.split()[1])
+                except (ValueError, IndexError):
+                    raise EncoderScanError("Cannot parse ASI Z position: " + response)
+            if not math.isfinite(z_units):
+                raise EncoderScanError("Non-finite ASI Z position")
+            z0_mm = z_units / self.units_per_mm
+            start_mm = z0_mm + self.settings.start_offset_um / 1000.0
+            end_mm = start_mm + self.settings.travel_distance_um / 1000.0
+            command = "2SCANR X={:.6f} Y={:.6f} Z={}".format(
+                start_mm, end_mm, self.settings.encoder_divider)
+            print("Encoder Z scan:", command)
+            self.command(command)
+            self.prepared_settings = self.settings
         else:
-            try:
-                z_units = float(response.split()[1])
-            except (ValueError, IndexError):
-                raise EncoderScanError("Cannot parse ASI Z position: " + response)
-        if not math.isfinite(z_units):
-            raise EncoderScanError("Non-finite ASI Z position")
-        z0_mm = z_units / self.units_per_mm
-        start_mm = z0_mm + self.settings.start_offset_um / 1000.0
-        end_mm = start_mm + self.settings.travel_distance_um / 1000.0
-        command = "2SCANR X={:.6f} Y={:.6f} Z={}".format(
-            start_mm, end_mm, self.settings.encoder_divider)
-        print("Encoder Z scan:", command)
-        self.command(command)
+            print("Encoder Z scan: reusing previous SCANR range")
         # Mark before sending: even a missing acknowledgment can mean motion began.
         self.scan_started = True
         self.command("2SCAN")

@@ -13,12 +13,14 @@ class FilmRequest(object):
                  frames = 0,
                  overwrite = False,
                  tcp_request = False,
+                 reuse_encoder_scan = False,
                  **kwds):
         super().__init__(**kwds)
 
         assert(isinstance(frames, int))
         assert(isinstance(overwrite, bool))
         assert(isinstance(tcp_request, bool))
+        assert(isinstance(reuse_encoder_scan, bool))
 
         # The basename to use, if this is None then film.film will figure
         # out what basename to use.
@@ -38,6 +40,9 @@ class FilmRequest(object):
         # Whether the request came from the record button of via TCP.
         self.tcp_request = tcp_request
 
+        # Per-movie request to reuse the previous absolute encoder scan range.
+        self.reuse_encoder_scan = reuse_encoder_scan
+
     def getBasename(self):
         return self.basename
 
@@ -55,6 +60,9 @@ class FilmRequest(object):
 
     def isTCPRequest(self):
         return self.tcp_request
+
+    def reuseEncoderScan(self):
+        return self.reuse_encoder_scan
         
     def overwriteOk(self):
         return self.overwrite

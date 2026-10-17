@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<sequence>
+
+      <branch name="test_0">
+        <DATakeMovie>
+          <name type="str">bleach_0_0</name>
+          <length type="int">40</length>
+		  <reuse_encoder_scan type="bool">False</reuse_encoder_scan>
+        </DATakeMovie>
+      </branch>
+      
+	  <branch name="test_1">
+        <DATakeMovie>
+          <name type="str">bleach_0_1</name>
+          <length type="int">40</length>
+		  <reuse_encoder_scan type="bool">True</reuse_encoder_scan>
+        </DATakeMovie>
+      </branch>
+	  
+	  	  <branch name="test_2">
+        <DATakeMovie>
+          <name type="str">bleach_0_2</name>
+          <length type="int">40</length>
+		  <reuse_encoder_scan type="bool">True</reuse_encoder_scan>
+        </DATakeMovie>
+      </branch>
+	  
+	  	  	  <branch name="test_3">
+        <DATakeMovie>
+          <name type="str">bleach_0_3</name>
+          <length type="int">40</length>
+		  <reuse_encoder_scan type="bool">True</reuse_encoder_scan>
+        </DATakeMovie>
+      </branch>
+	  
+	  
+	  	  	  <branch name="test_4">
+        <DATakeMovie>
+          <name type="str">bleach_0_4</name>
+          <length type="int">40</length>
+		  <reuse_encoder_scan type="bool">True</reuse_encoder_scan>
+        </DATakeMovie>
+      </branch>
+	  
+</sequence>

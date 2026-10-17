@@ -145,6 +145,7 @@ class FilmBox(QtWidgets.QGroupBox):
                                              film_length = film_request.getFrames(),
                                              overwrite = film_request.overwriteOk(),
                                              run_shutters = self.ui.autoShuttersCheckBox.isChecked(),
+                                             reuse_encoder_scan = film_request.reuseEncoderScan(),
                                              tcp_request = True)
 
         else:

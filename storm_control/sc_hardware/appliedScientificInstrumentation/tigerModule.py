@@ -191,6 +191,7 @@ class TigerController(stageModule.StageModule):
         self.encoder_scan = None
         self.encoder_scan_for_film = False
         self.encoder_scan_triggered = False
+        self.encoder_reuse_setup = False
         self.encoder_polling_timers = []
         self.encoder_cameras = {}
         self.encoder_trigger_sources = set()
@@ -378,7 +379,8 @@ class TigerController(stageModule.StageModule):
                 if not self.encoder_scan_triggered:
                     self.encoder_scan_triggered = True
                     hardwareModule.runHardwareTask(
-                        self, message, lambda: self.runEncoderTask(self.encoder_scan.start_scan))
+                        self, message, lambda: self.runEncoderTask(
+                            lambda: self.encoder_scan.start_scan(reuse_setup=self.encoder_reuse_setup)))
                 return True
 
         elif message.isType("stop camera"):
@@ -468,6 +470,7 @@ class TigerController(stageModule.StageModule):
                                        ", ".join(sorted(self.encoder_trigger_sources)))
             self.encoder_scan_for_film = True
             self.encoder_scan_triggered = False
+            self.encoder_reuse_setup = message.getData()["film settings"].reuseEncoderScan()
             self.pauseEncoderPolling()
             run_shutters = message.getData()["film settings"].runShutters()
             hardwareModule.runHardwareTask(
@@ -504,6 +507,7 @@ class TigerController(stageModule.StageModule):
             self.resumeEncoderPolling()
             self.encoder_scan_for_film = False
             self.encoder_scan_triggered = False
+            self.encoder_reuse_setup = False
         if self.stage_functionality is not None:
             super().stopFilm(message)
         hardwareModule.runHardwareTask(self, message, self.stopLED)

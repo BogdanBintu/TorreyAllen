@@ -227,7 +227,7 @@
     </scan>
   </focuslock>
   <illumination validate="True">
-    <default_power type="custom">1.0,1.0,1.0,0.000,0.200</default_power>
+    <default_power type="custom">0.75,0.3,0.1,0.000,0.010</default_power>
     <on_off_state type="custom">False,False,False,False,False</on_off_state>
     <power_buttons type="custom">[[['Max', 1.0], ['Low', 0.1]], [['Max', 1.0], ['Low', 0.1]], [['Max', 1.0], ['Low', 0.1]], [['Max', 1.0], ['Low', 0.1]], [['Max', 1.0], ['Low', 0.1]]]</power_buttons>
     <shutters type="string">C:\TorreyAllen\Paramaters\750_647_561_405_shutter.xml</shutters>
