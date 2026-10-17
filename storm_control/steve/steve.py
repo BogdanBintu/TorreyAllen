@@ -106,7 +106,8 @@ class Window(QtWidgets.QMainWindow):
         #
         # This is created separately but is contained inside the Mosaic tab.
         #
-        self.positions = positions.Positions(item_store = self.item_store,
+        self.positions = positions.Positions(comm_object = self.comm,
+                                             item_store = self.item_store,
                                              parameters = self.parameters)
         pos_group_box = self.mosaic.getPositionsGroupBox()
         self.positions.setTitleBar(pos_group_box)
@@ -156,6 +157,7 @@ class Window(QtWidgets.QMainWindow):
         menu_items = [["Take Picture", self.mosaic.handleTakeMovie],
                       ["Goto Position", self.mosaic.handleGoToPosition],
                       ["Record Position", self.positions.handleRecordPosition],
+                      ["Record current position", self.positions.handleRecordCurrentPosition],
                       ["Add Section", self.sections.handleAddSection],
                       ["Query Objective", self.objectives.handleGetObjective],
                       ["Remove Last Picture", self.mosaic.handleRemoveLastPicture],

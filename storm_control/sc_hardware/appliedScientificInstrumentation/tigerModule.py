@@ -549,6 +549,34 @@ class TigerController(stageModule.StageModule):
     def tcpMessage(self, message):
         tcp_message = message.getData()["tcp message"]
         fn = self.stage_functionality
+        # Opt in so existing XY stage tracking keeps its original behavior.
+        if tcp_message.isType("Get Stage Position") and tcp_message.getData("include_z", False):
+            message.addResponse(halMessage.HalMessageResponse(
+                source=self.module_name, data={"handled": True}))
+            if tcp_message.isTest():
+                return
+            try:
+                if self.z_stage_fn is None:
+                    raise tiger.TigerMoveError("A motorized z_stage must be configured to record XYZ")
+                if (self.encoder_scan_for_film or
+                        (self.encoder_scan is not None and self.encoder_scan.scan_started) or
+                        fn.am_moving or self.z_stage_fn.feedback_move_active or
+                        self.z_stage_fn.encoder_scan_active):
+                    raise tiger.TigerMoveError("Wait for the stage move or encoder movie to finish before recording XYZ")
+            except Exception as error:
+                tcp_message.setError(True, str(error))
+                return
+
+            def read_position():
+                try:
+                    pos = self.readCurrentXYZ()
+                    for axis, value in pos.items():
+                        tcp_message.addResponse("stage_" + axis, value)
+                except Exception as error:
+                    tcp_message.setError(True, str(error))
+
+            hardwareModule.runHardwareTask(self, message, read_position)
+            return
         if tcp_message.isType("Move Stage") and not tcp_message.isTest():
             try:
                 value = tcp_message.getData("stage_z", -1.0)
@@ -609,6 +637,19 @@ class TigerController(stageModule.StageModule):
             hardwareModule.runHardwareTask(self, message, move_stage)
             return
         super().tcpMessage(message)
+
+    def readCurrentXYZ(self):
+        """Worker only: query hardware, return microns in HAL display sign."""
+        self.controller_mutex.lock()
+        try:
+            busy = [self.controller.axisIsBusy(axis) for axis in "XYZ"]
+            if any(busy):
+                raise tiger.TigerMoveError("Wait for X, Y and Z to stop before recording the current position")
+            pos = self.controller.axesPositionStrict(("X", "Y", "Z"))
+            pos["z"] = -pos["z"]
+            return pos
+        finally:
+            self.controller_mutex.unlock()
 
     def moveXYZWithFeedback(self, x, y, raw_z):
         """Worker only: preserve encoder speed and invalidate the old Z range."""

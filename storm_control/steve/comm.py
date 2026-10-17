@@ -44,11 +44,22 @@ class Comm(QtCore.QObject):
                                               port = 9000,
                                               server_name = "hal",
                                               verbose = True)
-#        self.tcp_client.comLostConnection.connect(self.handleDisconnect)
+        self.tcp_client.comLostConnection.connect(self.handleDisconnect)
         self.tcp_client.messageReceived.connect(self.handleMessageReceived)
+
+    def handleDisconnect(self):
+        if self.busy:
+            request = self.current_message
+            self.busy = False
+            self.current_message = None
+            if request is not None:
+                request.error("The connection to HAL was lost. Reconnect and try again.")
 
     @hdebug.debug        
     def handleMessageReceived(self, message):
+        if self.current_message is None:
+            warnings.warn("Received a HAL response without a pending request.")
+            return
         self.busy = False
 
         # Save this property of the message as the message finalizer
@@ -60,10 +71,12 @@ class Comm(QtCore.QObject):
         # last message that we sent.
         if not (message.getID() == self.current_message.getMessageID()):
             warnings.warn("Received a response to a different message.")
+            self.current_message.error("HAL returned a response to a different request.")
         elif message.hasError():
             err_msg = "tcp error: " + message.getErrorMessage()
             warnings.warn(err_msg)
             hdebug.logText(err_msg)
+            self.current_message.error(message.getErrorMessage())
         else:
             # Warning! This can change self.current_message.
             self.current_message.finalizer(message)
@@ -89,10 +102,11 @@ class Comm(QtCore.QObject):
         self.current_message = comm_message
 
         # This method is a NOP if we're already connected.
-        if self.tcp_client.startCommunication():
+        if self.tcp_client.startCommunication() and self.current_message is not None:
             self.tcp_client.sendMessage(self.current_message.getMessage())
             return True
         else:
+            self.busy = False
             self.current_message = None
             warnings.warn("Cannot connect to HAL.")
             return False
@@ -108,7 +122,7 @@ class CommMessage(object):
     Base message class.
     """
     @hdebug.debug
-    def __init__(self, disconnect = True, finalizer_fn = None, **kwds):
+    def __init__(self, disconnect = True, finalizer_fn = None, error_fn = None, **kwds):
         super().__init__(**kwds)
 
         # If this is True we'll disconnect from HAL when we receive the
@@ -118,6 +132,7 @@ class CommMessage(object):
         # This function will be called when HALs response to a message
         # is received.
         self.finalizer_fn = finalizer_fn
+        self.error_fn = error_fn
 
         # This is the HAL message.
         self.tcp_message = None
@@ -138,6 +153,10 @@ class CommMessage(object):
     def finalizer(self, tcp_message_response):
         if self.finalizer_fn is not None:
             self.finalizer_fn(self.tcp_message, tcp_message_response)
+
+    def error(self, message):
+        if self.error_fn is not None:
+            self.error_fn(message)
 
 
 class CommMessageMovie(CommMessage):
@@ -181,10 +200,12 @@ class CommMessagePosition(CommMessage):
     Query current stage position.
     """
     @hdebug.debug
-    def __init__(self, **kwds):
+    def __init__(self, include_z = False, **kwds):
         super().__init__(**kwds)
 
-        self.tcp_message = tcpMessage.TCPMessage(message_type = "Get Stage Position")    
+        data = {"include_z": True} if include_z else {}
+        self.tcp_message = tcpMessage.TCPMessage(message_type = "Get Stage Position",
+                                               message_data = data)
 
 
 class CommMessageStage(CommMessage):

@@ -10,8 +10,10 @@ Hazen 10/18
 Jeff 3/22
 """
 
+import math
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+import storm_control.steve.comm as comm
 import storm_control.steve.coord as coord
 import storm_control.steve.steveItems as steveItems
 
@@ -27,10 +29,13 @@ class PositionItem(steveItems.SteveItem):
     rectangle_size = 1
     selected_pen = QtGui.QPen(QtGui.QColor(255,0,0))
 
-    def __init__(self, a_point = None, **kwds):
+    def __init__(self, a_point = None, z_um = None, **kwds):
         super().__init__(**kwds)
 
         self.a_point = None
+        self.z_um = None if z_um is None else float(z_um)
+        if self.z_um is not None and not math.isfinite(self.z_um):
+            raise ValueError("Position Z must be finite")
         self.text = None
         self.x_size = coord.umToPix(self.rectangle_size)
         self.y_size = coord.umToPix(self.rectangle_size)
@@ -62,6 +67,8 @@ class PositionItem(steveItems.SteveItem):
     def setLocation(self, a_point):
         self.a_point = a_point
         self.text = "{0:.2f},{1:.2f}".format(a_point.x_um, a_point.y_um)
+        if self.z_um is not None:
+            self.text += ",{0:.2f}".format(self.z_um)
         self.graphics_item.setPos(a_point.x_pix - 0.5 * self.x_size,
                                   a_point.y_pix - 0.5 * self.y_size)
 
@@ -83,8 +90,8 @@ class PositionItemLoader(steveItems.SteveItemLoader):
     """
     Creates a PositionItem from saved data.
     """
-    def load(self, directory, x, y):
-        return PositionItem(coord.Point(float(x), float(y), "um"))
+    def load(self, directory, x, y, z = None):
+        return PositionItem(coord.Point(float(x), float(y), "um"), z_um=z)
 
 
 class Positions(QtWidgets.QListView):
@@ -93,9 +100,10 @@ class Positions(QtWidgets.QListView):
 
     This duck types a steveModule.SteveModule() object.
     """
-    def __init__(self, item_store = None, parameters = None, **kwds):
+    def __init__(self, item_store = None, parameters = None, comm_object = None, **kwds):
         super().__init__(**kwds)
 
+        self.comm = comm_object
         self.item_store = item_store
         self.mosaic_event_coord = None
         self.step_size = parameters.get("step_size")
@@ -116,9 +124,9 @@ class Positions(QtWidgets.QListView):
         # Set mosaic file loader. This handles loading PositionItems from a mosaic file.
         self.item_store.addLoader(PositionItem.data_type, PositionItemLoader())
 
-    def addPosition(self, pos):
+    def addPosition(self, pos, z_um = None):
         # Add to our item store.
-        position_item = PositionItem(pos)
+        position_item = PositionItem(pos, z_um=z_um)
         self.item_store.addItem(position_item)
 
         # Also add to this views model.
@@ -205,6 +213,34 @@ class Positions(QtWidgets.QListView):
 
     def handleRecordPosition(self, ignored):
         self.addPosition(self.mosaic_event_coord)
+
+    def handleRecordCurrentPosition(self, ignored = None):
+        if self.comm is None:
+            self.handleCurrentPositionError("HAL communication is not configured.")
+            return
+        if self.comm.isBusy():
+            self.handleCurrentPositionError("Steve is communicating with HAL. Try again when it finishes.")
+            return
+        request = comm.CommMessagePosition(include_z=True,
+                                          finalizer_fn=self.handleCurrentPosition,
+                                          error_fn=self.handleCurrentPositionError)
+        if self.comm.sendMessage(request) is False:
+            self.handleCurrentPositionError("Cannot connect to HAL. Start HAL and try again.")
+
+    def handleCurrentPosition(self, request, response):
+        try:
+            xyz = [float(response.getResponse("stage_" + axis)) for axis in "xyz"]
+            if not all(math.isfinite(value) for value in xyz):
+                raise ValueError("Nonfinite stage position")
+        except (TypeError, ValueError):
+            self.handleCurrentPositionError(
+                "HAL did not return valid X, Y and motorized Z positions. "
+                "Install the HAL part of the Record current position update.")
+            return
+        self.addPosition(coord.Point(xyz[0], xyz[1], "um"), z_um=xyz[2])
+
+    def handleCurrentPositionError(self, message):
+        QtWidgets.QMessageBox.warning(self, "Record current position", str(message))
             
     def keyPressEvent(self, event):
         # Loop over all selected indexes and create a list of current items
@@ -247,8 +283,11 @@ class Positions(QtWidgets.QListView):
         with open(filename) as fp:
             for line in fp:
                 try:
-                    [x, y] = line.split(",")
-                    self.addPosition(coord.Point(float(x), float(y), "um"))
+                    values = [float(value) for value in line.strip().split(",")]
+                    if len(values) not in (2, 3) or not all(math.isfinite(value) for value in values):
+                        continue
+                    z_um = values[2] if len(values) == 3 else None
+                    self.addPosition(coord.Point(values[0], values[1], "um"), z_um=z_um)
                 except ValueError:
                     pass
 
@@ -261,9 +300,17 @@ class Positions(QtWidgets.QListView):
             self.position_list_model.appendRow(positions_standard_item)
 
     def savePositions(self, filename):
+        items = list(self.item_store.itemIterator(item_type = PositionItem))
+        include_z = any(item.z_um is not None for item in items)
         with open(filename, "w") as fp:
-            for item in self.item_store.itemIterator(item_type = PositionItem):
-                fp.write(item.getText() + '\n')
+            for item in items:
+                text = item.getText()
+                # Keep a rectangular XYZ file if old cursor positions are
+                # mixed with current-stage recordings. -1 leaves Z unchanged
+                # when this row is later used by Dave.
+                if include_z and item.z_um is None:
+                    text += ",-1.00"
+                fp.write(text + '\n')
 
     def setMosaicEventCoord(self, a_coord):
         self.mosaic_event_coord = a_coord
