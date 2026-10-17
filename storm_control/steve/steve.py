@@ -17,6 +17,8 @@ import storm_control.steve.comm as comm
 import storm_control.steve.coord as coord
 import storm_control.steve.imageCapture as imageCapture
 import storm_control.steve.imageItem as imageItem
+import storm_control.steve.maskProcessing as maskProcessing
+import storm_control.steve.maskEditor as maskEditor
 import storm_control.steve.mosaic as mosaic
 import storm_control.steve.positions as positions
 import storm_control.steve.qtRegexFileDialog as qtRegexFileDialog
@@ -39,6 +41,7 @@ class Window(QtWidgets.QMainWindow):
         self.context_menu = QtWidgets.QMenu(self)
         self.comm = comm.Comm()
         self.item_store = steveItems.SteveItemsStore()
+        self.mask_session = None
         self.modules = []
         self.parameters = parameters
         self.regexp_str = ""
@@ -179,386 +182,59 @@ class Window(QtWidgets.QMainWindow):
         self.cleanUp()
     @hdebug.debug
     def handleMakeMask(self, boolean):
-        import napari
-        import numpy as np
+        if self.mask_session is not None and self.mask_session.isOpen():
+            self.mask_session.viewer.window.activate()
+            return
+        try:
+            factor = self.parameters.get("mask_downsample", 1)
+            flat_field = self.parameters.get("mask_flat_field", True)
+            if not isinstance(flat_field, bool):
+                raise ValueError("mask_flat_field must be a boolean")
+            images = list(self.item_store.itemIterator(item_type=imageItem.ImageItem))
+            objective_data = {item.objective_name: item.getData()
+                              for item in self.item_store.itemIterator()
+                              if item.data_type == "objective"}
+            QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+            try:
+                preview = maskProcessing.build_mosaic(images, objective_data,
+                                                       downsample=factor, flat_field=flat_field)
+            finally:
+                QtWidgets.QApplication.restoreOverrideCursor()
+            self.mask_session = maskEditor.MaskEditor(preview,
+                                                       on_complete=self.finishMaskSession,
+                                                       on_error=self.handleMaskError,
+                                                       parent=self)
+            self.viewer = self.mask_session.viewer
+        except Exception as error:
+            self.handleMaskError(str(error))
 
+    def handleMaskError(self, message):
+        QtWidgets.QMessageBox.warning(self, "Make Mask", str(message))
 
-        def linear_flat_correction(ims,fl=None,reshape=True,resample=4,vec=[0.1,0.15,0.25,0.5,0.75,0.9]):
-            #correct image as (im-bM[1])/bM[0]
-            #ims=np.array(ims)
-            if reshape:
-                ims_pix = np.reshape(ims,[ims.shape[0]*ims.shape[1],ims.shape[2],ims.shape[3]])
-            else:
-                ims_pix = np.array(ims[::resample])
-            ims_pix_sort = np.sort(ims_pix[::resample],axis=0)
-            ims_perc = np.array([ims_pix_sort[int(frac*len(ims_pix_sort))] for frac in vec])
-            i1,i2=np.array(np.array(ims_perc.shape)[1:]/2,dtype=int)
-            x = ims_perc[:,i1,i2]
-            X = np.array([x,np.ones(len(x))]).T
-            y=ims_perc
-            a = np.linalg.inv(np.dot(X.T,X))
-            cM = np.swapaxes(np.dot(X.T,np.swapaxes(y,0,-2)),-2,1)
-            bM = np.swapaxes(np.dot(a,np.swapaxes(cM,0,-2)),-2,1)
-            if fl is not None:
-                folder = os.path.dirname(fl)
-                if not os.path.exists(folder):
-                    os.makedirs(folder)
-                pickle.dump(bM,open(fl,'wb'))
-            return bM    
-        def compose_mosaic(ims,xs_um,ys_um,ims_c=None,um_per_pix=0.108333,rot = 0):
-            dtype = np.float32
-            im_ = ims[0]
-            szs = im_.shape
-            sx,sy = szs[-2],szs[-1]
-            ### Apply rotation:
-            theta=-np.deg2rad(rot)
-            xs_um_ = np.array(xs_um)*np.cos(theta)-np.array(ys_um)*np.sin(theta)
-            ys_um_ = np.array(ys_um)*np.cos(theta)+np.array(xs_um)*np.sin(theta)
-            ### Calculate per pixel
-            xs_pix = np.array(xs_um_)/um_per_pix
-            xs_pix = np.array(xs_pix-np.min(xs_pix),dtype=int)
-            ys_pix = np.array(ys_um_)/um_per_pix
-            ys_pix = np.array(ys_pix-np.min(ys_pix),dtype=int)
-            sx_big = np.max(xs_pix)+sx+1
-            sy_big = np.max(ys_pix)+sy+1
-            dim = [sx_big,sy_big]
-            if len(szs)==3:
-                dim = [szs[0],sx_big,sy_big]
-            
-            if ims_c is None:
-                if len(ims)>25:
-                    try:
-                        ims_c = linear_flat_correction(ims,fl=None,reshape=False,resample=1,vec=[0.1,0.15,0.25,0.5,0.65,0.75,0.9])
-                    except:
-                        imc_c = np.median(ims,axis=0)
-                else:
-                    ims_c = np.median(ims,axis=0)
-            
-            im_big = np.zeros(dim,dtype = dtype)
-            
-            for i,(im_,x_,y_) in enumerate(zip(ims,xs_pix,ys_pix)):
-                if ims_c is not None:
-                    if len(ims_c)==2:
-                        im_coef,im_inters = np.array(ims_c,dtype = 'float32')
-                        im__=(np.array(im_,dtype = 'float32')-im_inters)/im_coef
-                    else:
-                        ims_c_ = np.array(ims_c,dtype = 'float32')
-                        im__=np.array(im_,dtype = 'float32')/ims_c_*np.median(ims_c_)
-                else:
-                    im__=np.array(im_,dtype = 'float32')
-                im__ = np.array(im__,dtype = dtype)
-                im_big[...,x_:x_+sx,y_:y_+sy]=im__
-            return im_big
-        
-        ###### Actual computation
-        obj_name = None
-        layers = [] 
-        ims,x_ums,y_ums = [],[],[]
-        for i, elt in enumerate(self.item_store.itemIterator()):
-            if 'imageItem' in str(type(elt)):
-                dic = elt.getDict()
-                obj_name = dic['objective_name']
-                im = dic['numpy_data'].T
-                ims.append(im)
-                x_ums.append(dic['x_um'])
-                y_ums.append(dic['y_um'])
-                vmin = dic['pixmap_min']
-                vmax = dic['pixmap_max']
-                self.fov_sz_low = np.array(im.shape)
-        if obj_name is not None:
-            dic_obj={}
-            for i, elt in enumerate(self.item_store.itemIterator()):
-                if 'ObjectiveItem' in str(type(elt)):
-                    dic_obj[elt.objective_name] = elt.getData()
-                    
-            um_per_pixel = dic_obj[obj_name][0]
-            drift = dic_obj[obj_name][1:]
-            target_um_per_pixel = np.min([e[0] for e in dic_obj.values()])
+    def finishMaskSession(self, masks, preview):
+        self.im_msk = masks
+        routes = [maskProcessing.order_positions(maskProcessing.candidate_positions(mask, preview))
+                  for mask in masks]
+        directory = self.snapshot_directory
+        if any(len(route) for route in routes):
+            os.makedirs(directory, exist_ok=True)
+        count = 0
+        for index, route in enumerate(routes, start=1):
+            if not len(route):
+                continue
+            filename = os.path.join(directory, "pos_{}.txt".format(index))
+            with open(filename, "w") as handle:
+                for x, y in route:
+                    handle.write("{:.2f},{:.2f}\n".format(x, y))
+            for x, y in route:
+                self.positions.addPosition(coord.Point(float(x), float(y), "um"))
+                count += 1
+        self.statusBar().showMessage("Make Mask: added {} positions.".format(count), 10000)
 
-
-            imf = compose_mosaic(ims,x_ums,y_ums,ims_c=None,um_per_pix=um_per_pixel,rot = 0)
-
-            #self.im_msk=imf
-            self.x_ums=x_ums
-            self.y_ums=y_ums
-            self.drift = drift
-            self.um_per_pixel=um_per_pixel
-            self.target_um_per_pixel=target_um_per_pixel
-            #with napari.gui_qt(): 
-            self.viewer = napari.Viewer(title="Make Mask")
-            self.viewer.add_image(imf,contrast_limits=[vmin,vmax],name='base_mosaic')
-            
-            self.viewer.window._qt_window.steve = self
-            napari.run()
-            ### get the mask image
     def addpositions_mask(self):
-        # Modified C:\Users\Bogdan\anaconda3\envs\cellpose\Lib\site-packages\napari\_qt\qt_main_window.py
-        import numpy as np
-        viewer = self.viewer
-        layers = [layer for layer in viewer.layers if 'base_mosaic' not in layer.name]
-        im_msk = None
-        if len(layers)>0:
-            im_msk = []
-            layer = layers[-1]
-            for layer in layers:
-                if 'shape' in str(type(layer)):
-                    im_msk_ = np.sum(layer.to_masks(),axis=0)>0
-                    im_msk.append(im_msk_)
-            #elif 'image' in str(type(layer)):
-            #    im_msk = layer.data>0
-            #elif 'labels' in str(type(layer)):
-            #    im_msk = layer.data>0
-                
-                
-        ##TSP
-        # Cities are represented as Points, which are represented as complex numbers
-        Point = complex
-        def X(point): 
-            "The x coordinate of a point."
-            return point.real
-        def Y(point): 
-            "The y coordinate of a point."
-            return point.imag
-
-        def distance(A, B): 
-            "The distance between two points."
-            return abs(A - B)
-        def nn_tsp(cities):
-            """Start the tour at the first city; at each step extend the tour 
-            by moving from the previous city to its nearest neighbor 
-            that has not yet been visited."""
-            start = first(cities)
-            tour = [start]
-            unvisited = set(cities - {start})
-            while unvisited:
-                C = nearest_neighbor(tour[-1], unvisited)
-                tour.append(C)
-                unvisited.remove(C)
-            return tour
-        def first(collection):
-            "Start iterating over collection, and return the first element."
-            return next(iter(collection))
-        def nearest_neighbor(A, cities):
-            "Find the city in cities that is nearest to city A."
-            return min(cities, key=lambda c: distance(c, A))
-        def greedy_tsp(cities):
-            """Go through edges, shortest first. Use edge to join segments if possible."""
-            edges = shortest_edges_first(cities) # A list of (A, B) pairs
-            endpoints = {c: [c] for c in cities} # A dict of {endpoint: segment}
-            for (A, B) in edges:
-                if A in endpoints and B in endpoints and endpoints[A] != endpoints[B]:
-                    new_segment = join_endpoints(endpoints, A, B)
-                    if len(new_segment) == len(cities):
-                        return new_segment
-        def shortest_edges_first(cities):
-            "Return all edges between distinct cities, sorted shortest first."
-            edges = [(A, B) for A in cities for B in cities 
-                            if id(A) < id(B)]
-            return sorted(edges, key=lambda edge: distance(*edge))
-        def join_endpoints(endpoints, A, B):
-            "Join B's segment onto the end of A's and return the segment. Maintain endpoints dict."
-            Asegment, Bsegment = endpoints[A], endpoints[B]
-            if Asegment[-1] is not A: Asegment.reverse()
-            if Bsegment[0] is not B: Bsegment.reverse()
-            Asegment.extend(Bsegment)
-            del endpoints[A], endpoints[B]
-            endpoints[Asegment[0]] = endpoints[Asegment[-1]] = Asegment
-            return Asegment
-
-        def alter_tour(tour):
-            "Try to alter tour for the better by reversing segments."
-            original_length = tour_length(tour)
-            for (start, end) in all_segments(len(tour)):
-                reverse_segment_if_better(tour, start, end)
-            # If we made an improvement, then try again; else stop and return tour.
-            if tour_length(tour) < original_length:
-                return alter_tour(tour)
-            return tour
-
-        def all_segments(N):
-            "Return (start, end) pairs of indexes that form segments of tour of length N."
-            return [(start, start + length)
-                    for length in range(N, 2-1, -1)
-                    for start in range(N - length + 1)]
-        def tour_length(tour):
-            "The total of distances between each pair of consecutive cities in the tour."
-            return sum(distance(tour[i], tour[i-1]) 
-                       for i in range(len(tour)))
-        def reverse_segment_if_better(tour, i, j):
-            "If reversing tour[i:j] would make the tour shorter, then do it." 
-            # Given tour [...A-B...C-D...], consider reversing B...C to get [...A-C...B-D...]
-            A, B, C, D = tour[i-1], tour[i], tour[j-1], tour[j % len(tour)]
-            # Are old edges (AB + CD) longer than new ones (AC + BD)? If so, reverse segment.
-            if distance(A, B) + distance(C, D) > distance(A, C) + distance(B, D):
-                tour[i:j] = reversed(tour[i:j])
-        ##
-
-        def get_tsp(xy,first_pos=-1,plt_val=True):
-            cities = frozenset(Point(x_,y_) for x_,y_ in xy)
-            #be greedy first
-            cities_sort=greedy_tsp(cities)
-            #alter
-            cities_sort=alter_tour(cities_sort)
-            x=[val.real for val in cities_sort]
-            y=[val.imag for val in cities_sort]
-            itinerary = np.array([x,y]).T
-            # new file to save
-
-            last_pos = np.where(np.all(np.array(itinerary)==[xy[first_pos]],-1))[0][0]
-            itinerary = np.roll(itinerary,-last_pos,axis=0)
-            if plt_val:
-                plt.plot(itinerary[:,0], itinerary[:,1],'o-')
-                plt.show()
-            return itinerary
-        def flatten(list_):
-            return [item for sublist in list_ for item in sublist]
-        def grab_block(im,center,block_sizes):
-            dims = im.shape
-            slices = []
-            def in_dim(c,dim):
-                c_ = c
-                if c_<0: c_=0
-                if c_>dim: c_=dim
-                return c_
-            block_sizes_ = [int(bl) for bl in block_sizes]
-            for c,block,dim in zip(center,block_sizes_,dims):
-                block_ = int(block/2)
-                c=int(c)
-                c_min,c_max = in_dim(c-block_,dim),in_dim(c+block-block_,dim)
-                slices.append(slice(c_min,c_max))
-            slices.append(Ellipsis)
-            return im[tuple(slices)]
-        def get_positions(image,pos_ims,low_mag_pixel_size=0.108333*6,high_mag_pixel_size = 0.108333,
-                          fov_sz = [3200,3200],
-                          perc_overlap=0.95,
-                          start_pos=[0,0],
-                          drift=[0,0],tag='circular'):
-            #low_mag_pixel_size = 0.108333*6 #pixel size of lowmag
-            #high_mag_pixel_size = 0.108333#*6/4.
-            xoffset,yoffset = drift #offset between low mag and high mag objectives
-
-            x_start,y_start = start_pos#0,0 #starting positions
-
-
-
-            xsz,ysz=image.shape
-
-            obj_ratio=low_mag_pixel_size/high_mag_pixel_size
-            sz=np.array(fov_sz)/obj_ratio*perc_overlap
-            
-            sz_=np.array(fov_sz)/obj_ratio
-            im_=np.array(image)
-            xcand = np.arange(0,int(im_.shape[0]),int(sz[0]))+sz[0]/2
-            ycand = np.arange(0,int(im_.shape[1]),int(sz[1]))+sz[1]/2
-            x,y = zip(*[(x__,y__) for x__ in xcand 
-                            for y__ in ycand 
-                            if np.sum(grab_block(im_,[x__,y__],sz_))])
-            
-            if len(x)>3:
-                Point = complex
-                cities = frozenset(Point(x[i],y[i]) for i in range(len(x)))
-                cities_sort=alter_tour(greedy_tsp(cities))
-                x2=[val.real for val in cities_sort]
-                y2=[val.imag for val in cities_sort]
-            else:
-                x2,y2=x,y
-            x_ = np.array(x2)#sorted positions in pixels 
-            y_ = np.array(y2)#sorted positions in pixels 
-
-            
-            pix_sz=low_mag_pixel_size
-            
-            starts = np.min(pos_ims,axis=0)
-            offset = fov_sz/2*low_mag_pixel_size
-
-            x = starts[0]-offset[0]+x_*pix_sz+xoffset#This is -X offset
-            y = starts[1]-offset[1]+y_*pix_sz+yoffset#This is -Y offset
-
-            #####################################################################           XMIN             #########################
-
-
-
-            #x_min,x_max=-np.inf,np.inf
-            def select_points(x,y,delta_x_keep):
-                x_min = np.mean(x)-delta_x_keep/2.
-                x_max = np.mean(x)+delta_x_keep/2.
-                x_keep,y_keep = [],[]
-                for x_t,y_t in zip(x,y):
-                    if x_t>x_min and x_t<x_max:
-                        x_keep.append(x_t)
-                        y_keep.append(y_t)
-                x_keep = np.array(x_keep)
-                y_keep = np.array(y_keep)
-                return x_keep,y_keep
-            x_keep,y_keep = select_points(x,y,np.inf)
-            #plt.plot(y_keep,x_keep,'ro')
-            #x_keep,y_keep = select_points(x,y,11000.)
-
-
-
-
-
-            ind0 = np.argmin((x_keep-x_start)**2+(y_keep-y_start)**2)################can modify to change the start position
-
-            x_keep = np.roll(x_keep,-ind0)
-            y_keep = np.roll(y_keep,-ind0)
-
-            if False:#tag=='circular':
-                R = 9600
-                cm = [0,0]
-                #select the points in circle
-                keep2 = (x_keep-cm[0])**2+(y_keep-cm[1])**2<R**2
-                x_keep,y_keep=x_keep[keep2],y_keep[keep2]
-
-
-            x_keep = list(x_keep)+[x_keep[0],x_keep[1]]########################## repeat first 2 position
-            y_keep = list(y_keep)+[y_keep[0],y_keep[1]]########################## repeat first 2 position
-            
-            
-            
-            if False:
-                filename=os.path.dirname(folder)+os.sep+r'pos.txt'
-                fid=open(filename,'w')
-                for x_t,y_t in zip(x_keep,y_keep):
-                    fid.write(str(x_t)+','+str(y_t)+'\n')
-                fid.close()
-                print("Number of snaps:" + str(len(x_keep)))
-
-            if False:
-                import matplotlib.pylab as plt
-                plt.figure(figsize=(10,10))
-                plt.plot(y_keep,x_keep,'g-o')
-                plt.plot(y_keep[0],x_keep[0],'ro')
-                xcirc,ycirc = (cm[::-1]+R*np.array([[np.cos(th),np.sin(th)] for th in np.linspace(0,2*np.pi,100)])).T
-                plt.plot(xcirc,ycirc,'b')
-                plt.axis('equal')
-                plt.show()
-            
-            return np.round(x_keep,2),np.round(y_keep,2)
-        if im_msk is not None:
-            self.im_msk = im_msk
-
-            #print(im_msk.shape)
-            count_fl=0
-            for im_msk_ in im_msk:
-                count_fl+=1
-                xkp,ykp = get_positions(im_msk_,np.array([self.x_ums,self.y_ums]).T,
-                          low_mag_pixel_size=self.um_per_pixel,
-                          high_mag_pixel_size =self.target_um_per_pixel,
-                          drift=self.drift,
-                          fov_sz = self.fov_sz_low,
-                          perc_overlap=0.95,
-                          start_pos=[0,0],
-                          tag='circular')
-                fid = open(self.snapshot_directory+'pos_'+str(count_fl)+'.txt','w')
-                for x,y in zip(xkp,ykp):
-                    fid.write(str(x)+','+str(y)+'\n')
-                fid.close()
-                import storm_control.steve.coord as coord
-                for x,y in zip(xkp,ykp):
-                    self.positions.addPosition(coord.Point(float(x), float(y), "um"))
-        else:
-            print("Did not find mask!")
+        # Compatibility entry point for an older custom Napari close hook.
+        if self.mask_session is not None:
+            self.mask_session.complete()
         
         
     @hdebug.debug

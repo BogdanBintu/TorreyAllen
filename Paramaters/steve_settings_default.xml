@@ -15,5 +15,6 @@
   <ellipse_size type="float">3</ellipse_size>
   <pen_width type="int">20</pen_width>
   <step_size type="float">5</step_size>
-
+<mask_downsample type="int">3</mask_downsample>
+<mask_flat_field type="boolean">True</mask_flat_field>
 </settings>
