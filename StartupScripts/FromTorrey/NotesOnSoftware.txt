@@ -1,0 +1,1 @@
+Once connected the ASI stage controller, I need to install a Virtual USB.
