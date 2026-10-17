@@ -2,6 +2,12 @@
 <sequence>
 
       <branch name="test_0">
+	          <DAMoveStage>
+          <stage_x type="float">-13828.1</stage_x>
+          <stage_y type="float">-7034.5</stage_y>
+		  <stage_z type="float">-1</stage_z>
+        </DAMoveStage>
+		
         <DATakeMovie>
           <name type="str">bleach_0_0</name>
           <length type="int">40</length>
@@ -10,6 +16,13 @@
       </branch>
       
 	  <branch name="test_1">
+	  
+	  <DAMoveStage>
+          <stage_x type="float">-13528.1</stage_x>
+          <stage_y type="float">-7034.5</stage_y>
+		  <stage_z type="float">-1</stage_z>
+        </DAMoveStage>
+		
         <DATakeMovie>
           <name type="str">bleach_0_1</name>
           <length type="int">40</length>
@@ -18,13 +31,26 @@
       </branch>
 	  
 	  	  <branch name="test_2">
+		  
+		  	  <DAMoveStage>
+          <stage_x type="float">-13228.1</stage_x>
+          <stage_y type="float">-7034.5</stage_y>
+		  <stage_z type="float">-1</stage_z>
+        </DAMoveStage>
+		  
         <DATakeMovie>
           <name type="str">bleach_0_2</name>
           <length type="int">40</length>
 		  <reuse_encoder_scan type="bool">True</reuse_encoder_scan>
         </DATakeMovie>
       </branch>
-	  
+	  		  
+		  	  <DAMoveStage>
+          <stage_x type="float">-13528.1</stage_x>
+          <stage_y type="float">-7334.5</stage_y>
+		  <stage_z type="float">-1</stage_z>
+        </DAMoveStage>
+		
 	  	  	  <branch name="test_3">
         <DATakeMovie>
           <name type="str">bleach_0_3</name>
@@ -33,7 +59,12 @@
         </DATakeMovie>
       </branch>
 	  
-	  
+	    <DAMoveStage>
+          <stage_x type="float">-13128.1</stage_x>
+          <stage_y type="float">-7634.5</stage_y>
+		  <stage_z type="float">-1</stage_z>
+        </DAMoveStage>
+		
 	  	  	  <branch name="test_4">
         <DATakeMovie>
           <name type="str">bleach_0_4</name>

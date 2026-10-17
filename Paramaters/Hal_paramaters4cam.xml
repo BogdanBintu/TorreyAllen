@@ -395,6 +395,11 @@
 	<ttl_mode type="int">22</ttl_mode>	
 	<devices>
 	  <xy_stage>
+	  <move_feedback type="boolean">True</move_feedback>
+		<move_poll_interval_ms type="float">20</move_poll_interval_ms>
+		<move_timeout_s type="float">10</move_timeout_s>
+		<move_settle_ms type="float">0</move_settle_ms>
+		<move_tolerance_um type="float">0.5</move_tolerance_um>
 	    <velocity type="float">5</velocity>
 	  </xy_stage>
 	  <z_piezo>

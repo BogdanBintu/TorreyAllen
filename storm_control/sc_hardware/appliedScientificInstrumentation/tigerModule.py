@@ -83,14 +83,55 @@ class TigerStageFunctionality(stageModule.StageFunctionalityNF):
     """
     According to the documentation, this stage has a maximum velocity of 7.5mm / second.
     """
-    def __init__(self, velocity = None, **kwds):
+    feedbackMoveFinished = QtCore.pyqtSignal(object)
+
+    def __init__(self, velocity = None, move_feedback = False,
+                 move_poll_interval_ms = 20.0, move_timeout_s = 10.0,
+                 move_settle_ms = 0.0, move_tolerance_um = 0.5, **kwds):
         super().__init__(**kwds)
         self.max_velocity = 1.0e+3 * velocity # Maximum velocity in um/s
+        self.move_feedback = move_feedback
+        self.move_wait_settings = {
+            "poll_interval": float(move_poll_interval_ms) / 1000.0,
+            "timeout": float(move_timeout_s),
+            "settle_time": float(move_settle_ms) / 1000.0,
+            "tolerance": float(move_tolerance_um)}
+        settings = self.move_wait_settings
+        if (not all(math.isfinite(value) for value in settings.values()) or
+                settings["poll_interval"] <= 0 or settings["timeout"] <= 0 or
+                settings["settle_time"] < 0 or settings["tolerance"] < 0):
+            raise ValueError("Invalid XY move feedback settings")
+        self.feedbackMoveFinished.connect(self.handleFeedbackMoveFinished)
 
         self.mustRun(task = self.stage.setVelocity,
                      args = [velocity, velocity])
         
 #        self.stage.setVelocity(velocity, velocity)
+
+    def beginFeedbackMove(self):
+        """Called on the GUI thread before starting a Dave move worker."""
+        if self.am_moving:
+            raise tiger.TigerMoveError("An XY move is already in progress")
+        self.am_moving = True
+        self.update_timer.stop()
+        self.isMoving.emit(True)
+
+    def moveWithFeedback(self, x, y):
+        """Called only in a hardware worker; serialize all controller access."""
+        self.device_mutex.lock()
+        try:
+            return self.stage.moveXYAndWait(x, y, **self.move_wait_settings)
+        finally:
+            self.device_mutex.unlock()
+
+    def handleFeedbackMoveFinished(self, pos):
+        self.am_moving = False
+        if pos is not None:
+            self.handlePositionUpdate({"x": pos["x"], "y": pos["y"]})
+            self.isMoving.emit(False)
+        # A failed move has no successful 'arrived' signal. The TCP reply
+        # carries the error so Dave does not advance to DATakeMovie.
+        self.update_timer.start()
 
     def calculateMoveTime(self, dx, dy):
         vx,vy = self.stage.getVelocity()
@@ -116,9 +157,17 @@ class TigerZStageFunctionality(stageZModule.ZStageFunctionalityBuffered):
     The z sign convention of this stage is the opposite from the expected
     so we have to adjust.
     """
+    feedbackMoveFinished = QtCore.pyqtSignal(object)
+
     def __init__(self, update_interval = None, velocity = None, **kwds):
         super().__init__(**kwds)
         self.encoder_scan_active = False
+        self.feedback_move_active = False
+        self.feedback_polling_timers = []
+        self.move_velocity = float(velocity)
+        if not math.isfinite(self.move_velocity) or self.move_velocity <= 0:
+            raise ValueError("Motorized Z positioning velocity must be finite and positive")
+        self.feedbackMoveFinished.connect(self.handleFeedbackMoveFinished)
 
         self.maximum = self.getParameter("maximum")
         self.minimum = self.getParameter("minimum")
@@ -154,18 +203,47 @@ class TigerZStageFunctionality(stageZModule.ZStageFunctionalityBuffered):
         z_pos = -1.0*self.z_position + z_delta
         self.goAbsolute(z_pos)        
 
+    def feedbackTarget(self, z_pos):
+        """Validate a HAL-display coordinate and convert it to hardware Z."""
+        if not math.isfinite(z_pos):
+            raise tiger.TigerMoveError("stage_z must be finite")
+        if z_pos < self.minimum or z_pos > self.maximum:
+            raise tiger.TigerMoveError("stage_z {:.3f} is outside HAL Z limits [{:.3f}, {:.3f}]".format(
+                z_pos, self.minimum, self.maximum))
+        return -z_pos
+
+    def beginFeedbackMove(self):
+        if self.feedback_move_active or self.encoder_scan_active:
+            raise tiger.TigerMoveError("Motorized Z is already in use")
+        self.feedback_move_active = True
+        self.feedback_polling_timers = []
+        for timer in (self.update_timer, self.restart_timer):
+            self.feedback_polling_timers.append((timer, timer.isActive()))
+            timer.stop()
+
+    def handleFeedbackMoveFinished(self, raw_z):
+        # Internal Z cache uses hardware sign, like position() and goRelative().
+        if raw_z is not None:
+            self.z_position = raw_z
+            self.zStagePosition.emit(-raw_z)
+        self.feedback_move_active = False
+        for timer, was_active in self.feedback_polling_timers:
+            if was_active:
+                timer.start()
+        self.feedback_polling_timers = []
+
     def handleRestartTimer(self):
-        if not self.encoder_scan_active:
+        if not self.encoder_scan_active and not self.feedback_move_active:
             self.update_timer.start()
         
     def handleUpdateTimer(self):
-        if not self.encoder_scan_active:
+        if not self.encoder_scan_active and not self.feedback_move_active:
             self.mustRun(task = self.position,
                          ret_signal = self.zStagePosition)
 
     def position(self):
         # A polling job may already be queued when filming starts.
-        if not self.encoder_scan_active:
+        if not self.encoder_scan_active and not self.feedback_move_active:
             self.z_position = self.z_stage.zPosition()["z"]
         return -1.0*self.z_position
 
@@ -236,6 +314,11 @@ class TigerController(stageModule.StageModule):
                     self.stage_functionality = TigerStageFunctionality(device_mutex = self.controller_mutex,
                                                                        stage = self.stage,
                                                                        update_interval = 500,
+                                                                       move_feedback = settings.get("move_feedback", False),
+                                                                       move_poll_interval_ms = settings.get("move_poll_interval_ms", 20.0),
+                                                                       move_timeout_s = settings.get("move_timeout_s", 10.0),
+                                                                       move_settle_ms = settings.get("move_settle_ms", 0.0),
+                                                                       move_tolerance_um = settings.get("move_tolerance_um", 0.5),
                                                                        velocity = settings.get("velocity", 7.5))
                     self.functionalities[self.module_name + "." + dev_name] = self.stage_functionality
 
@@ -462,6 +545,96 @@ class TigerController(stageModule.StageModule):
             
         elif message.isType("tcp message"):
             self.tcpMessage(message)
+
+    def tcpMessage(self, message):
+        tcp_message = message.getData()["tcp message"]
+        fn = self.stage_functionality
+        if tcp_message.isType("Move Stage") and not tcp_message.isTest():
+            try:
+                value = tcp_message.getData("stage_z", -1.0)
+                z_target = -1.0 if value is None else float(value)
+                if not math.isfinite(z_target):
+                    raise ValueError("stage_z must be finite")
+            except (TypeError, ValueError) as error:
+                tcp_message.setError(True, str(error))
+                message.addResponse(halMessage.HalMessageResponse(
+                    source=self.module_name, data={"handled": True}))
+                return
+            # Preserve XY-only behavior for the sentinel. Every other value,
+            # including zero/negative positions, requests verified motorized Z.
+            if z_target == -1.0 and not fn.move_feedback:
+                super().tcpMessage(message)
+                return
+            message.addResponse(halMessage.HalMessageResponse(
+                source=self.module_name, data={"handled": True}))
+            z_fn = None
+            xy_started = False
+            try:
+                if (self.encoder_scan_for_film or
+                        (self.encoder_scan is not None and self.encoder_scan.scan_started)):
+                    raise tiger.TigerMoveError("Cannot move the stage during an encoder movie")
+                raw_z = None
+                if z_target != -1.0:
+                    z_fn = self.z_stage_fn
+                    if z_fn is None:
+                        raise tiger.TigerMoveError("stage_z requires a configured motorized z_stage")
+                    raw_z = z_fn.feedbackTarget(z_target)
+                fn.beginFeedbackMove()
+                xy_started = True
+                if z_fn is not None:
+                    z_fn.beginFeedbackMove()
+            except Exception as error:
+                if xy_started:
+                    fn.handleFeedbackMoveFinished(None)
+                tcp_message.setError(True, str(error))
+                return
+
+            def move_stage():
+                pos = None
+                try:
+                    x, y = tcp_message.getData("stage_x"), tcp_message.getData("stage_y")
+                    if z_fn is None:
+                        pos = fn.moveWithFeedback(x, y)
+                    else:
+                        pos = self.moveXYZWithFeedback(x, y, raw_z)
+                except Exception as error:
+                    tcp_message.setError(True, str(error))
+                finally:
+                    if z_fn is not None:
+                        z_fn.feedbackMoveFinished.emit(None if pos is None else pos["z"])
+                    fn.feedbackMoveFinished.emit(pos)
+
+            # Holding this HAL message delays the TCP acknowledgement. Dave
+            # starts the next action only after the worker finishes or fails.
+            hardwareModule.runHardwareTask(self, message, move_stage)
+            return
+        super().tcpMessage(message)
+
+    def moveXYZWithFeedback(self, x, y, raw_z):
+        """Worker only: preserve encoder speed and invalidate the old Z range."""
+        self.controller_mutex.lock()
+        try:
+            scan = self.encoder_scan
+            if scan is not None:
+                # Even reuse_encoder_scan=True must prepare around the new Z.
+                scan.prepared_settings = None
+            restore_speed = None
+            if scan is not None and scan.settings.enabled:
+                restore_speed = scan.settings.speed_mm_per_s
+            try:
+                self.controller.checkMoveAck(
+                    self.controller.zSetVelocity(self.z_stage_fn.move_velocity),
+                    "motorized Z positioning speed")
+                pos = self.controller.moveXYZAndWait(
+                    x, y, raw_z, **self.stage_functionality.move_wait_settings)
+                self.z_stage_fn.z_position = pos["z"]
+                return pos
+            finally:
+                if restore_speed is not None:
+                    self.controller.checkMoveAck(
+                        self.controller.zSetVelocity(restore_speed), "encoder Z scan speed restore")
+        finally:
+            self.controller_mutex.unlock()
 
     def startFilm(self, message):
         if self.encoder_parameters.get("encoder_scan.enabled"):
