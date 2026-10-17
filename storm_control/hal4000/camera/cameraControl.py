@@ -18,6 +18,9 @@ import storm_control.sc_library.parameters as params
 import storm_control.hal4000.camera.frame as frame
 
 
+from storm_control.sc_library import acquisitionTiming
+
+
 class CameraException(halExceptions.HardwareException):
     pass
 
@@ -315,6 +318,8 @@ class CameraControl(QtCore.QThread):
         
     def startCamera(self):
 
+        acquisitionTiming.event("camera start requested", camera=self.camera_name)
+
         # Update the camera temperature, if available.
         if self.camera_functionality.hasTemperature():
             self.getTemperature()
@@ -336,6 +341,7 @@ class CameraControl(QtCore.QThread):
             time.sleep(0.01)
 
         self.camera_functionality.started.emit()
+        acquisitionTiming.event("camera armed", camera=self.camera_name)
 
     def startFilm(self, film_settings, is_time_base):
         """
@@ -346,11 +352,14 @@ class CameraControl(QtCore.QThread):
             self.film_length = film_settings.getFilmLength()
 
     def stopCamera(self):
+        acquisitionTiming.event("camera stop requested", camera=self.camera_name, running=self.running)
         if self.running:
 
             # Stop the thread.
             self.running = False
-            self.wait()
+            with acquisitionTiming.span("camera thread join", camera=self.camera_name):
+                self.wait()
+        acquisitionTiming.event("camera stopped", camera=self.camera_name)
 
     def stopFilm(self):
         self.film_length = None
@@ -384,7 +393,8 @@ class HWCameraControl(CameraControl):
         #       only then set self.running. Otherwise HAL might think the
         #       camera is running when it is not.
         #
-        self.camera.startAcquisition()
+        with acquisitionTiming.span("camera SDK start", camera=self.camera_name):
+            self.camera.startAcquisition()
         self.running = True
         self.thread_started = True
         while(self.running):
@@ -416,7 +426,8 @@ class HWCameraControl(CameraControl):
                 self.newData.emit(frame_data)
             self.msleep(5)
 
-        self.camera.stopAcquisition()
+        with acquisitionTiming.span("camera SDK stop", camera=self.camera_name):
+            self.camera.stopAcquisition()
             
 #    def startCamera(self):
 #        print(">start", self.camera_name, self.running)

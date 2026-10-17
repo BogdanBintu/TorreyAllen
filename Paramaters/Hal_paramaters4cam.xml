@@ -387,6 +387,8 @@
       <class_name type="string">TigerController</class_name>
 
       <configuration>
+	  <fast_serial type="boolean">True</fast_serial>
+      <serial_response_timeout type="float">1.0</serial_response_timeout>
 	  <encoder_scan_supported type="boolean">True</encoder_scan_supported>
 	<baudrate type="int">115200</baudrate>
 	<port type="string">COM3</port>

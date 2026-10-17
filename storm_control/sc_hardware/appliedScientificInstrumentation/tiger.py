@@ -5,20 +5,39 @@ RS-232 interface to an ASI tiger controller.
 Hazen 05/18
 """
 import traceback
+import math
+import re
+import time
 
 import storm_control.sc_hardware.serial.RS232 as RS232
 import storm_control.sc_library.hdebug as hdebug
+from storm_control.sc_library import acquisitionTiming
+
+
+class TigerSerialError(RuntimeError):
+    pass
 
 
 class Tiger(RS232.RS232):
     """
     Tiger controller interface class.
     """
-    def __init__(self, **kwds):
+    # Only known single-line command families use the faster reader. WHO,
+    # BU/build reports, help and other multiline replies keep the old reader.
+    single_line_command = re.compile(
+        r"\s*(?:\d+)?(?:W|J|MC|S|M|R|VE|H|PM|TTL|LED|UM|SCAN|SCANR|SCANV)\b",
+        re.IGNORECASE)
+
+    def __init__(self, fast_serial=False, serial_response_timeout=1.0, **kwds):
         """
         Connect to the tiger controller at the specified port.
         """
         self.live = True
+        self.fast_serial = fast_serial
+        self.serial_response_timeout = float(serial_response_timeout)
+        if not math.isfinite(self.serial_response_timeout) or self.serial_response_timeout <= 0:
+            raise ValueError("serial_response_timeout must be finite and positive")
+        self.serial_failed = False
         self.unit_to_um = 0.1
         self.um_to_unit = 1.0/self.unit_to_um
 
@@ -38,6 +57,38 @@ class Tiger(RS232.RS232):
             self.live = False
             print("Tiger controller is not connected? Controller is not on?")
             print("Failed to connect to the tiger controller at port", kwds["port"])
+
+    def commWithResp(self, command):
+        with acquisitionTiming.span("Tiger serial", command=command):
+            if self.serial_failed:
+                raise TigerSerialError("Tiger reply stream is unsynchronized; restart HAL before sending commands")
+            if self.fast_serial and self.single_line_command.match(command):
+                return self.fastCommWithResp(command)
+            return super().commWithResp(command)
+
+    def fastCommWithResp(self, command):
+        """Read a whole CR-terminated reply without the fixed 100 ms sleep.
+
+        ASI normally uses CR LF and can be configured for CR only. Returning
+        at CR supports both; a leftover LF is harmless whitespace at the
+        beginning of the next reply. Read timeouts may split a packet, so keep
+        reading until CR or the overall deadline, never return a partial reply.
+        The caller still owns the normal controller mutex.
+        """
+        self.sendCommand(command)
+        deadline = time.monotonic() + self.serial_response_timeout
+        response = bytearray()
+        while time.monotonic() < deadline:
+            chunk = self.tty.read_until(expected=b"\r")
+            if chunk:
+                response.extend(chunk)
+                if chunk.endswith(b"\r"):
+                    return response.decode(self.encoding)
+        # Do not let a delayed reply become the next command's acknowledgment.
+        # No fallback or automatic re-send: SCAN is a motion toggle.
+        self.serial_failed = True
+        raise TigerSerialError("Timed out waiting for complete Tiger reply to {!r}: {!r}; restart HAL".format(
+            command, bytes(response)))
 
     def goAbsolute(self, x, y):
         self.commWithResp("M X={0:.1f} Y={1:.1f}".format(x * self.um_to_unit, y * self.um_to_unit))

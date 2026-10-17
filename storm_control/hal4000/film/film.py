@@ -15,6 +15,7 @@ Hazen 01/17
 import copy
 import datetime
 import os
+from storm_control.sc_library import acquisitionTiming
 
 from PyQt5 import QtCore, QtWidgets
 
@@ -438,6 +439,11 @@ class Film(halModule.HalModule):
     def handleNewFrame(self, frame_number):
         self.number_frames = frame_number + 1
 
+        if frame_number == 0:
+            acquisitionTiming.event("first time-base frame", movie=self.film_settings.getBasename())
+        if self.film_settings.isFixedLength() and self.number_frames == self.film_settings.getFilmLength():
+            acquisitionTiming.event("last time-base frame", movie=self.film_settings.getBasename())
+
         # Update display of the number of frames.
         self.view.updateFrames(self.number_frames)
 
@@ -472,6 +478,7 @@ class Film(halModule.HalModule):
         # to the 'stop film' message. We save them in an xml file here.
         elif message.isType("stop film"):
             self.film_state = "idle"
+            acquisitionTiming.event("stop-film modules finished", movie=self.film_settings.getBasename())
             acq_p = None
             notes = ""
             film_settings = message.getData()["film settings"]
@@ -498,7 +505,8 @@ class Film(halModule.HalModule):
                             if (p.getName() == "notes"):
                                 notes = p.getv()
 
-                to_save.saveToFile(film_settings.getBasename() + ".xml")
+                with acquisitionTiming.span("save movie XML", movie=film_settings.getBasename()):
+                    to_save.saveToFile(film_settings.getBasename() + ".xml")
 
                 if self.logfile_fp is not None:
                     msg = ",".join([str(datetime.datetime.now()),
@@ -587,6 +595,7 @@ class Film(halModule.HalModule):
 
         elif message.isType("ready to film"):
             self.waiting_on.remove(message.getSourceName())
+            acquisitionTiming.event("module ready", module=message.getSourceName(), waiting_on=list(self.waiting_on))
 
             # All modules are ready, so start the cameras.
             if (len(self.waiting_on) == 0):
@@ -633,6 +642,7 @@ class Film(halModule.HalModule):
 
     def setLockout(self, state, acquisition_parameters = None):
         self.locked_out = state
+        acquisitionTiming.event("film lockout", locked=state)
         if acquisition_parameters is not None:
             self.sendMessage(halMessage.HalMessage(m_type = "film lockout",
                                                    data = {"locked out" : self.locked_out,
@@ -642,6 +652,7 @@ class Film(halModule.HalModule):
                                                    data = {"locked out" : self.locked_out}))
             
     def startCameras(self):
+        acquisitionTiming.event("start cameras", phase=self.film_state, live=self.view.amInLiveMode())
         
         # Start slave camera(s) first.
         self.sendMessage(halMessage.HalMessage(m_type = "start camera",
@@ -666,6 +677,7 @@ class Film(halModule.HalModule):
         running, i.e. we are not in live mode.
         """
         self.film_settings = film_settings
+        acquisitionTiming.event("movie request", movie=film_settings.getBasename(), reuse=film_settings.reuseEncoderScan())
         self.film_state = "start"
         self.view.enableUI(False)
 
@@ -678,6 +690,7 @@ class Film(halModule.HalModule):
         by the 'start camera' message.
         """
         self.film_state = "run"
+        acquisitionTiming.event("initial camera stop finished", movie=self.film_settings.getBasename())
 
         #
         # Check if we are going to overwrite existing files by checking
@@ -692,17 +705,20 @@ class Film(halModule.HalModule):
         if self.film_settings.isSaved():
             for camera in self.camera_functionalities:
                 if camera.getParameter("saved"):
-                    self.writers.append(imagewriters.createFileWriter(camera, self.film_settings))
+                    with acquisitionTiming.span("create writer", camera=camera.getCameraName()):
+                        self.writers.append(imagewriters.createFileWriter(camera, self.film_settings))
         if (len(self.writers) == 0):
             self.view.updateSize(0.0)
         
         # Start filming.
         self.waiting_on = copy.copy(self.wait_for)
+        acquisitionTiming.event("prepare film modules", movie=self.film_settings.getBasename(), waiting_on=list(self.waiting_on))
         self.sendMessage(halMessage.HalMessage(sync = True,
                                                m_type = "start film",
                                                data = {"film settings" : self.film_settings}))
 
     def stopCameras(self):
+        acquisitionTiming.event("stop cameras", phase=self.film_state)
         
         # Stop master cameras first.
         self.sendMessage(halMessage.HalMessage(m_type = "stop camera",
@@ -721,6 +737,8 @@ class Film(halModule.HalModule):
         Tell the cameras to stop, then wait until we get the
         'camera stopped' message from all the cameras.
         """
+        acquisitionTiming.event("time-base camera finished", movie=self.film_settings.getBasename())
+
         # Disconnect the timing functionality as it is stopped now. Clear our
         # reference to the timing functionality. The actual cleanup of this
         # object is handled by timing.timing.
@@ -749,8 +767,10 @@ class Film(halModule.HalModule):
                 return
 
         # Close writers.
+        acquisitionTiming.event("cameras and writer signals stopped", movie=self.film_settings.getBasename())
         for writer in self.writers:
-            writer.closeWriter()
+            with acquisitionTiming.span("close writer", filename=writer.filename):
+                writer.closeWriter()
 
         # Enable the UI.
         self.view.enableUI(True)

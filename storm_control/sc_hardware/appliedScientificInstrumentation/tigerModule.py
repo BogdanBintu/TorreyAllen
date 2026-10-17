@@ -209,6 +209,8 @@ class TigerController(stageModule.StageModule):
         configuration = module_params.get("configuration")
         self.encoder_scan_supported = configuration.get("encoder_scan_supported", False)
         self.controller = tiger.Tiger(baudrate = configuration.get("baudrate"),
+                                      fast_serial = configuration.get("fast_serial", False),
+                                      serial_response_timeout = configuration.get("serial_response_timeout", 1.0),
                                       port = configuration.get("port"))
         
         if self.controller.getStatus():
@@ -499,19 +501,44 @@ class TigerController(stageModule.StageModule):
                     set_ttl = True
                 self.functionalities[fn_name].setFilmPower()
                     
+
     def stopFilm(self, message):
-        if self.encoder_scan_for_film:
+        # Save this before resetting the encoder flags.
+        was_encoder_film = self.encoder_scan_for_film
+
+        if was_encoder_film:
             if self.encoder_scan.scan_started:
-                raise EncoderScanError("ASI scan is not idle; position polling remains suspended")
-            # stop-camera completed before stop-film; motion is now idle.
+                raise EncoderScanError(
+                    "ASI scan is not idle; position polling remains suspended"
+                )
+
             self.resumeEncoderPolling()
             self.encoder_scan_for_film = False
             self.encoder_scan_triggered = False
             self.encoder_reuse_setup = False
-        if self.stage_functionality is not None:
-            super().stopFilm(message)
-        hardwareModule.runHardwareTask(self, message, self.stopLED)
 
+        if self.stage_functionality is not None:
+            if was_encoder_film:
+                # Save XY position without restoring joystick/motor controls.
+                pos = self.stage_functionality.getCurrentPosition()
+                pos_string = "{0:.2f},{1:.2f}".format(pos["x"], pos["y"])
+
+                pos_param = params.ParameterCustom(
+                    name="stage_position",
+                    value=pos_string
+                )
+
+                message.addResponse(
+                    halMessage.HalMessageResponse(
+                        source=self.module_name,
+                        data={"acquisition": [pos_param]}
+                    )
+                )
+            else:
+                # Preserve the original behavior for non-encoder movies.
+                super().stopFilm(message)
+
+        hardwareModule.runHardwareTask(self, message, self.stopLED)
     def stopLED(self):
         for fn_name in self.functionalities:
             if ("led" in fn_name):

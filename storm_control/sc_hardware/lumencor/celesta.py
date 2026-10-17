@@ -6,6 +6,7 @@ Bogdan 3/19
 """
 import urllib.request
 import traceback
+from storm_control.sc_library import acquisitionTiming
 def lumencor_httpcommand(command = 'GET IP',ip = '192.168.201.200'):
     """
     Sends commands to the lumencor system via http.
@@ -13,8 +14,9 @@ def lumencor_httpcommand(command = 'GET IP',ip = '192.168.201.200'):
     http://lumencor.com/wp-content/uploads/sites/11/2019/01/57-10018.pdf
     """
     command_full = r'http://'+ip+'/service/?command='+command.replace(' ','%20')
-    with urllib.request.urlopen(command_full) as response:
-        message = eval(response.read()) # the default is conveniently JSON so eval creates dictionary
+    with acquisitionTiming.span("Lumencor HTTP", command=command, ip=ip):
+        with urllib.request.urlopen(command_full) as response:
+            message = eval(response.read()) # the default is conveniently JSON so eval creates dictionary
     return message
 
 class LumencorLaser(object):
@@ -105,12 +107,13 @@ class LumencorLaser(object):
         power = float(response.split(' ')[-1])
         return power
 
-    def setLaserOnOff(self, on):
+    def setLaserOnOff(self, on, wake=True):
         """
         Turn the laser on/off.
         """
         if on:
-            lumencor_httpcommand(command = 'WAKEUP',ip=self.ip)
+            if wake:
+                lumencor_httpcommand(command = 'WAKEUP',ip=self.ip)
             self.message = lumencor_httpcommand(command = 'SET CH '+self.laser_id+' 1', ip=self.ip)
             self.on = True
         else:
@@ -126,7 +129,8 @@ class LumencorLaser(object):
             power_in_mw = self.pmax
         lumencor_httpcommand(command = 'WAKEUP',ip=self.ip)
         self.message = lumencor_httpcommand(command ='SET CHINT '+self.laser_id+' '+ str(int(power_in_mw)), ip=self.ip)
-        self.setLaserOnOff(True)
+        # Already awake above; avoid a second HTTP WAKEUP for every power write.
+        self.setLaserOnOff(True, wake=False)
         if self.message['message'][0]=='A':
             return True
         return False

@@ -92,8 +92,9 @@ class TigerEncoderScan:
 
     def prepare_film(self):
         # Match normal HAL XY behavior while leaving the scanned Z motor on.
-        self.command("J X- Y-")
-        self.command("MC X- Y- Z+")
+        #self.command("J X- Y-")
+        #self.command("MC X- Y- Z+")
+        pass
 
     def state(self):
         response = self.command("2SCAN X?")
@@ -115,7 +116,7 @@ class TigerEncoderScan:
         """
         if not self.settings.enabled:
             raise EncoderScanError("Encoder scan is disabled")
-        if self.scan_started:# or self.state() != "I":
+        if self.scan_started or self.state() != "I":
             raise EncoderScanError("ASI scan is already active; refusing to toggle SCAN")
         if not reuse_setup or self.prepared_settings != self.settings:
             # Invalidate first so a failed preparation cannot reuse stale Z.
